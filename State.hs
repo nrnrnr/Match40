@@ -68,7 +68,9 @@ peekProject = MP <$> project <$> ask
 setProject :: Project -> Update Database ()
 setProject p = modify $ \(Database s h _) -> Database s h (Just p)
 
-$(mkMethods ''Database ['peekProject, 'setProject]) 
+$(mkMethods ''Database [ 'peekStudents, 'addStudent
+                       , 'peekHistory, 'setHistory
+                       , 'peekProject, 'setProject]) 
 
 -- Use 'query PeekProject'
 -- and 'update (SetProject Project { projectName = "first", invitations = [] })'
