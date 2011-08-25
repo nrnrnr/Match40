@@ -5,10 +5,13 @@ where
 import Control.Applicative ((<$>))
 import Control.Monad.Reader (ask)
 import Control.Monad.State (get, put)
+import Data.Typeable
+
 import Happstack.State ( Component(..), End, Proxy(..), Query, Update, Version
                        , createCheckpoint, deriveSerialize, mkMethods, query
                        , startSystemState, shutdownSystem, update
                        )
+
 
 import Invitation
 import Types
@@ -35,21 +38,30 @@ $(deriveSerialize ''Invitation)
 instance Version Status
 $(deriveSerialize ''Status)
 
+newtype MaybeProject = MP (Maybe Project)
+  deriving (Typeable)
+
+instance Version MaybeProject
+$(deriveSerialize ''MaybeProject)
+
 
 instance Component Database where
   type Dependencies Database = End
   initialValue = Database [] (History []) Nothing
 
-peekProject :: Query Database (Maybe Project)
-peekProject = curProject <$> ask
+
+peekProject :: Query Database (MaybeProject)
+peekProject = MP <$> curProject <$> ask
 
 setProject :: Project -> Update Database ()
 setProject p =
   do (Database students history _) <- get
      put $ Database students history (Just p)
 
--- $(mkMethods ''Database ['peekProject, 'setProject]) 
+$(mkMethods ''Database ['peekProject, 'setProject]) 
 
 -- Use 'query PeekProject'
 -- and 'update (SetProject Project { projectName = "first", invitations = [] })'
+
+
 
