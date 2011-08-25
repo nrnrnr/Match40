@@ -1,21 +1,16 @@
-module DB
+module DB 
 where
+import Types
+import Invitation
 
-type URL = String
+-- | Project
 
-data Student = Student { name  :: FullName
-                       , email :: String
-                       , aboutMe :: String
-                       , photo :: URL
-                       , password :: String
-                       , status :: Enrollment
+data Project = Project { projectName :: String
+                       , invitations :: [Invitation]
                        }
 
-data Enrollment = Enrolled | Dropped
+data History = History [Project]
 
-type Email = String
-type Photo = String
-data FullName = FullName { last  :: String
-                         , first :: String
-                         , synonyms :: [String]
-                         }
+data Database = Database [Student] History (Maybe Project)
+
+

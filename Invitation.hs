@@ -1,8 +1,9 @@
 module Invitation 
 where
 
-import DB
 import Data.Time.Clock
+
+import Types
 
 -- | |Declined| is declined by recipient
 -- | |Witdrawn| is declined by original offerer
