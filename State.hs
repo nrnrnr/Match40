@@ -4,7 +4,7 @@ module State
 where
 import Control.Applicative ((<$>))
 import Control.Monad.Reader (ask)
-import Control.Monad.State (get, put, modify)
+import Control.Monad.State (modify)
 import Data.Typeable
 
 import Happstack.State ( Component(..), End, Proxy(..), Query, Update, Version
