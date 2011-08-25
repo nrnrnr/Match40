@@ -20,6 +20,13 @@ data History = History [Project]
 data Database = Database [Student] History (Maybe Project)
   deriving (Typeable)
 
-curProject :: Database -> Maybe Project
-curProject (Database _ _ p) = p
+students :: Database -> [Student]
+students (Database ss _ _) = ss
+
+projHistory :: Database -> History
+projHistory (Database _ h _) = h
+
+project :: Database -> Maybe Project
+project (Database _ _ p) = p
+
 

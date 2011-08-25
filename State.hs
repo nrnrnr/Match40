@@ -4,7 +4,7 @@ module State
 where
 import Control.Applicative ((<$>))
 import Control.Monad.Reader (ask)
-import Control.Monad.State (get, put)
+import Control.Monad.State (modify)
 import Data.Typeable
 
 import Happstack.State ( Component(..), End, Proxy(..), Query, Update, Version
@@ -13,9 +13,10 @@ import Happstack.State ( Component(..), End, Proxy(..), Query, Update, Version
                        )
 
 
+import DB
 import Invitation
 import Types
-import DB
+import qualified ToyRoster
 
 -- | State
 
@@ -47,16 +48,25 @@ $(deriveSerialize ''MaybeProject)
 
 instance Component Database where
   type Dependencies Database = End
-  initialValue = Database [] (History []) Nothing
+  initialValue = Database ToyRoster.roster (History []) Nothing
 
+peekStudents :: Query Database ([Student])
+peekStudents = students <$> ask
 
-peekProject :: Query Database (MaybeProject)
-peekProject = MP <$> curProject <$> ask
+addStudent :: Student -> Update Database ()
+addStudent s = modify $ \(Database ss h p) -> Database (s:ss) h p
+
+peekHistory :: Query Database History
+peekHistory = projHistory <$> ask
+
+setHistory :: History -> Update Database ()
+setHistory h = modify $ \(Database s _ p) -> Database s h p
+
+peekProject :: Query Database MaybeProject
+peekProject = MP <$> project <$> ask
 
 setProject :: Project -> Update Database ()
-setProject p =
-  do (Database students history _) <- get
-     put $ Database students history (Just p)
+setProject p = modify $ \(Database s h _) -> Database s h (Just p)
 
 $(mkMethods ''Database ['peekProject, 'setProject]) 
 
