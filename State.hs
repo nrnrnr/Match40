@@ -13,9 +13,10 @@ import Happstack.State ( Component(..), End, Proxy(..), Query, Update, Version
                        )
 
 
+import DB
 import Invitation
 import Types
-import DB
+import qualified ToyRoster
 
 -- | State
 
@@ -47,7 +48,7 @@ $(deriveSerialize ''MaybeProject)
 
 instance Component Database where
   type Dependencies Database = End
-  initialValue = Database [] (History []) Nothing
+  initialValue = Database ToyRoster.roster (History []) Nothing
 
 
 peekProject :: Query Database (MaybeProject)
