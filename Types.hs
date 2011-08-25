@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Types
   ( Student(..)
   , Enrollment(..)
@@ -5,6 +7,7 @@ module Types
   , fullName
   )
 where
+import Data.Typeable
 import Prelude hiding (last)
 import qualified Data.Char
 
@@ -20,8 +23,10 @@ data Student = Student { name  :: FullName
                        , password :: String
                        , status :: Enrollment
                        }
+  deriving (Typeable)
 
 data Enrollment = Enrolled | Dropped
+  deriving (Typeable)
 
 type Email = String
 type Photo = String
@@ -29,6 +34,7 @@ data FullName = FullName { last  :: String
                          , first :: String
                          , synonyms :: [String]
                          }
+  deriving (Typeable)
 
 fullName :: String -> FullName
 fullName s = FullName { last = last, first = first, synonyms = [] }
