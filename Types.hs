@@ -23,10 +23,10 @@ data Student = Student { name  :: FullName
                        , password :: String
                        , status :: Enrollment
                        }
-  deriving (Typeable)
+  deriving (Typeable, Eq, Ord)
 
 data Enrollment = Enrolled | Dropped
-  deriving (Typeable)
+  deriving (Typeable, Eq, Ord)
 
 type Email = String
 type Photo = String
@@ -34,7 +34,7 @@ data FullName = FullName { last  :: String
                          , first :: String
                          , synonyms :: [String]
                          }
-  deriving (Typeable)
+  deriving (Typeable, Eq, Ord)
 
 fullName :: String -> FullName
 fullName s = FullName { last = last, first = first, synonyms = [] }
