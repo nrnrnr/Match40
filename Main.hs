@@ -3,6 +3,7 @@ module Main where
 
 import Prelude                 hiding (head)
 
+import Control.Exception       (bracket)
 import Control.Monad           (msum)
 import Control.Monad.Reader
 import Data.Data               (Data, Typeable)
@@ -11,6 +12,10 @@ import Happstack.Server        ( Response, ServerPartT, ok, toResponse
                                , simpleHTTP, nullConf, seeOther, dir, notFound
                                , seeOther
                                )
+import Happstack.State         ( Proxy(..), createCheckpoint
+                               , startSystemState, shutdownSystem
+                               )
+import Text.Blaze.Internal     (HtmlM)
 import Text.Blaze.Html4.Strict ( (!), html, head, body, title, p, toHtml
                                , toValue, ol, li, a
                                , Html
@@ -18,10 +23,14 @@ import Text.Blaze.Html4.Strict ( (!), html, head, body, title, p, toHtml
 import Text.Blaze.Html4.Strict.Attributes (href)
 import Web.Routes              ( PathInfo(..), RouteT, showURL
                                , runRouteT, liftRouteT
-                               , Site(..), setDefault, mkSitePI)
+                               , Site(..), setDefault, mkSitePI
+                               , ShowURL, Link
+                               )
 import Web.Routes.TH           (derivePathInfo)
 import Web.Routes.Happstack    (implSite)
 
+import Auth
+import DB
 import State
 import Student
 
@@ -41,38 +50,35 @@ route url =
       Home           -> homePage
       (Private pSiD) -> privatePage pSiD
 
-toyStudent = Student { name = fullName "Bruce Springsteen"
-                     , email = "jamslam@gmail.com"
-                     , aboutMe = "Singer"
-                     , photo = Nothing
-                     , enrollment = Enrolled
-                     }
-
 homePage :: RouteT Sitemap (ServerPartT IO) Response
 homePage = 
     do students <- liftRouteT $ liftIO getStudents
+       pairs <- sequence $ 
+                map (\s -> do { url <- privateUrl s; return (s, url) }) 
+                students
        ok $ toResponse $ 
           html $ do
             head $ title $ (toHtml "Welcome Home!")
             body $ do
-              ol $ mconcat (map mkStudent students)
+              ol $ mconcat (map mkStudent pairs)
     where
-      mkStudent :: Student -> Html
-      mkStudent s =
-          li $ a ! href (toValue "blah") $ toHtml $ "Student blah blah"
-          -- do url <- showURL (Private pSiD) 
-             -- return $ li $ a ! href (toValue url) $  
-                        -- toHtml $ "Student " ++ (show $ pSiD) 
-          -- where pSiD = PrivateStudentId (show c) 
+      privateUrl :: Student -> RouteT Sitemap (ServerPartT IO) Link
+      privateUrl s = showURL (Private $ PrivateStudentId $ hash s)
+      
+
+      mkStudent :: (Student, Link) -> Html
+      mkStudent (s, url) =
+             li $ a ! href (toValue $ url) $ toHtml $ readableName s
 
 privatePage  :: PrivateStudentId -> RouteT Sitemap (ServerPartT IO) Response
-privatePage pSiD =
+privatePage (PrivateStudentId pSiD) =
     do homeURL <- showURL Home
-       ok $ toResponse $ 
+       s <- liftRouteT $ liftIO $ getAuthedStudent pSiD
+       ok $ toResponse $
           html $ do
-            head $ title $ (toHtml $ "Student " ++ show pSiD)
+            head $ title $ (toHtml $ "Student " ++ show s)
             body $ do
-                   p $ toHtml $ "You are now on your profile" ++ show pSiD
+                   p $ toHtml $ "You are now on your profile: " ++ show s
                    p $ do toHtml "Click "
                           a ! href (toValue homeURL) $ toHtml "here"
                           toHtml " to return home."
@@ -81,9 +87,15 @@ site :: Site Sitemap (ServerPartT IO Response)
 site = setDefault Home $ mkSitePI (runRouteT route)
 
 main :: IO ()
-main = simpleHTTP nullConf $ 
-       msum [ dir "favicon.ico" $ notFound (toResponse ())
-            , implSite "http://localhost:8000/" "" site
-            , seeOther "" (toResponse ())
-            ]
+main = do bracket (startSystemState (Proxy :: Proxy Database))
+                  createCheckpointAndShutdown $
+                    \_control -> simpleHTTP nullConf $
+                      msum [ dir "favicon.ico" $ notFound (toResponse ())
+                           , implSite "http://localhost:8000/" "" site
+                           , seeOther "" (toResponse ())
+                           ]
+       where
+          createCheckpointAndShutdown control =
+            do createCheckpoint control
+               shutdownSystem control 
        
