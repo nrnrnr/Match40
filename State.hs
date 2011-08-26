@@ -68,6 +68,13 @@ $(mkMethods ''Database [ 'peekStudents, 'addStudent
                        , 'peekProject, 'setProject]) 
 
 -- Abstract the use of 'query' so we don't have to use it everywhere
+getDatabase :: (MonadIO m) => m Database
+getDatabase = 
+  do students <- getStudents
+     history  <- getHistory
+     project  <- getProject
+     return $ Database students history project
+
 getStudents :: (MonadIO m) => m [Student]
 getStudents = query PeekStudents
 
