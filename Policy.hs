@@ -7,6 +7,7 @@ module Policy
   )
 where
 
+
 import Invitation
 import qualified DB
 import Student
@@ -23,4 +24,5 @@ signature = "The COMP 40 matchmaker"
 
 baseURL = "http://match40.cs.tufts.edu"
 
-loginURL student = "(URL cloudy; try again later)"
+loginURL student = "private/" ++ (hash student)
+

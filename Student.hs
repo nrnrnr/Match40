@@ -7,13 +7,15 @@ module Student
   , fullName
   , firstname
   , readableName
+  , hash
   )
 where
+import qualified Data.Char
+import Data.HashTable (hashString)
 import Data.Typeable
 import Prelude hiding (last)
-import qualified Data.Char
 
-
+import Codec.Binary.Base64.String (encode)
 
 type URL = String
 
@@ -22,7 +24,6 @@ data Student = Student { name  :: FullName
                        , email :: String
                        , aboutMe :: String
                        , photo :: Maybe URL
-                       , urlid :: String
                        , enrollment :: Enrollment
                        }
   deriving (Typeable, Eq, Ord)
@@ -52,3 +53,9 @@ readableName s = first fn ++ " " ++ last fn
     where fn = name s
 
 firstname s = first (name s)
+
+hash s = readable $ encode $ show $ hashString tohash
+  where
+    readable = filter (\c -> c `elem` ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'])
+    tohash = readableName s ++ email s
+
