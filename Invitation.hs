@@ -8,6 +8,8 @@ module Invitation
   , splitByTo
   , offered
   , differentPairs
+  , invariant1, invariant2, invariant3, invariant4, invariant5
+  , allInvariants
   )
 where
 
@@ -85,6 +87,9 @@ invariant5 is = all ok is
           offer_to_or_by s i =
               status i == Offered && (s == offeredBy i || s == offeredTo i)
 
+
+allInvariants is =
+    all (\p -> p is) [invariant1, invariant2, invariant3, invariant4, invariant5]
 
 ----------------------------------------------------------------
 

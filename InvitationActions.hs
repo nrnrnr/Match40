@@ -1,5 +1,6 @@
 module InvitationActions
   ( offer, accept, withdraw, decline
+  , liftI -- testing only
   )
 where
 
@@ -33,6 +34,10 @@ data IntermediateState = IS { old_is :: [Invitation] -- ^ untouched
                             , errors :: [String]     -- ^ messages on blocked actions
                             }
    -- actions may trigger other actions, which pass through these kinds of states
+
+instance Show IntermediateState where
+    show s = "Old: " ++ show (old_is s) ++ "\nNew: " ++ show (new_is s) ++ "\n" ++
+             (if null (errors s) then "" else "Errors: " ++ show (errors s))
 
 
 type Action = IntermediateState -> IntermediateState
@@ -121,7 +126,7 @@ offer' eligible by to state@(IS old new sends errors)
     | paired to = fail (toname ++ " already has a partner.")
     | not (eligible by to) = fail ("You are not eligible to work with " ++ toname)
     | Just i <- offered invs to by = accept' i state
-    | by == to  = IS others (this { status = Accepted } : new) sends errors
+    | by == to  = accept' this state
     | otherwise = IS others (this:new) (sends >> CourseMail.offer by to) errors
   where (this, others) = case splitByTo by to old of
                            (Just i, is) -> (i, is)
@@ -145,13 +150,15 @@ accept' inv state@(IS old new sends errors) =
                  (flip CourseMail.accept) inv state
     where to = offeredTo inv
           by = offeredBy inv
-          declines  = map decline'  (filter (isTo to /\ (not . isBy by)) offers)
-          withdraws = map withdraw' (filter (isBy to) offers)
+          declines  = map decline'  (filter (isTo to \/ isTo by) other_offers)
+          withdraws = map withdraw' (filter (isBy to \/ isBy by) other_offers)
           merge [] = \x -> x
           merge (f:fs) = f . merge fs
-          offers = filter (flip hasStatus Offered) old
+          other_offers = filter ((not . isThis) /\ flip hasStatus Offered) old
+          isThis inv = offeredBy inv == by && offeredTo inv == to
 
           p /\ q = \x -> p x && q x
+          p \/ q = \x -> p x || q x
 
 
 -- | Decline an invitation
@@ -185,28 +192,49 @@ purestamp i = i { history = (status i, arbitraryTime) : history i }
 
 ----------------------------------------------------------------------
 
-data Test = Test [Action] IState -- actions and final state
+data Test = Test [Action'] IState -- actions and final state
 
-actOnInvitation :: Invitation -> Gen Action
+instance Show Test where
+    show (Test actions state) =
+        concat (intersperse ";\n" (map show $ reverse actions)) ++
+                   "\n-->\n" ++ show state
+
+data Action' = Withdraw Invitation
+             | Decline Invitation
+             | Accept Invitation
+             | Offer Student Student
+  deriving (Show)
+
+actOnInvitation :: Invitation -> [Action']
 actOnInvitation inv = case status inv of
-                        Offered -> elements [withdraw' inv, decline' inv, accept' inv]
-                        _ -> fail "no invitations"
+                        Offered -> [Withdraw inv, Decline inv, Accept inv]
+                        _ -> []
 
-randomOffer :: Gen Action
+randomOffer :: Gen Action'
 randomOffer =
     do s1 <- elements ToyRoster.roster
        s2 <- elements ToyRoster.roster
-       return $ offer' (\ _ _ -> True) s1 s2
+       return $ Offer s1 s2
 
 instance Arbitrary Test where
     arbitrary = do steps <- arbitrary
                    randomSteps steps (Test [] [])
+    shrink (Test (a:as) _) = [Test as (foldr run [] as)]
+    shrink t = []
 
 randomSteps :: [()] -> Test -> Gen Test
 randomSteps [] t = return t
 randomSteps (() : units) (Test actions state) =
-    do action <- oneof (randomOffer : map actOnInvitation state)
-       randomSteps units (Test (action:actions) (wrap_pure action state))
+    do action <- oneof (randomOffer : map return (concatMap actOnInvitation state))
+       randomSteps units (Test (action:actions) (run action state))
+
+run a s = wrap_pure (step a) s
+  where
+    step (Withdraw inv) = withdraw' inv
+    step (Decline inv) = decline' inv
+    step (Accept inv) = accept' inv
+    step (Offer s1 s2) = offer' (\ _ _ -> True) s1 s2
 
 
-    
+liftI :: (IState -> Bool) -> (Test -> Bool)
+liftI p (Test _ s) = p s
