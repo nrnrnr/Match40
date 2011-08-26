@@ -4,14 +4,12 @@ module Auth
 where
 import Control.Monad.Reader
 
-import Happstack.State  ( query )
-
 import State
 import Student
 
 getAuthedStudent :: (MonadIO m) => String -> m (Maybe Student)
 getAuthedStudent id =
-  do students <- query PeekStudents
+  do students <- listStudents
      case filter (\s -> hash s == id) students of
        [s] -> return $ Just s
        _   -> return Nothing

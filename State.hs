@@ -4,7 +4,7 @@
 module State
 where
 import Control.Applicative ((<$>))
-import Control.Monad.Reader (ask)
+import Control.Monad.Reader (ask, MonadIO)
 import Control.Monad.State (modify)
 import Data.Typeable
 
@@ -65,6 +65,15 @@ setProject p = modify $ \(Database s h _) -> Database s h (Just p)
 $(mkMethods ''Database [ 'peekStudents, 'addStudent
                        , 'peekHistory, 'setHistory
                        , 'peekProject, 'setProject]) 
+
+listStudents :: (MonadIO m) => m [Student]
+listStudents = query PeekStudents
+
+getProject :: (MonadIO m) => m (Maybe Project)
+getProject = query PeekProject
+
+getHistory :: (MonadIO m) => m History
+getHistory = query PeekHistory
 
 -- Use 'query PeekProject'
 -- and 'update (SetProject Project { projectName = "first", invitations = [] })'
