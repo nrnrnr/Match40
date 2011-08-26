@@ -8,7 +8,7 @@ import Happstack.State  ( Query, query, mkMethods )
 
 import DB
 import State
-import Types
+import Student
 
 getAuthedStudent :: (MonadIO m) => String -> m (Maybe Student)
 getAuthedStudent id =
