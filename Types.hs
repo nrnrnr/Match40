@@ -21,7 +21,7 @@ data Student = Student { name  :: FullName
                        , aboutMe :: String
                        , photo :: Maybe URL
                        , password :: String
-                       , status :: Enrollment
+                       , enrollment :: Enrollment
                        }
   deriving (Typeable, Eq, Ord)
 
