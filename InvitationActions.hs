@@ -4,10 +4,12 @@ module InvitationActions
 where
 
 import Data.List
+import Test.QuickCheck
 
 import qualified CourseMail
 import Invitation
 import Student
+import qualified ToyRoster
 
 {-
 
@@ -179,3 +181,32 @@ arbitraryTime = error "no peeking at timestamps during testing!"
 
 purestamp :: Invitation -> Invitation
 purestamp i = i { history = (status i, arbitraryTime) : history i }
+
+
+----------------------------------------------------------------------
+
+data Test = Test [Action] IState -- actions and final state
+
+actOnInvitation :: Invitation -> Gen Action
+actOnInvitation inv = case status inv of
+                        Offered -> elements [withdraw' inv, decline' inv, accept' inv]
+                        _ -> fail "no invitations"
+
+randomOffer :: Gen Action
+randomOffer =
+    do s1 <- elements ToyRoster.roster
+       s2 <- elements ToyRoster.roster
+       return $ offer' (\ _ _ -> True) s1 s2
+
+instance Arbitrary Test where
+    arbitrary = do steps <- arbitrary
+                   randomSteps steps (Test [] [])
+
+randomSteps :: [()] -> Test -> Gen Test
+randomSteps [] t = return t
+randomSteps (() : units) (Test actions state) =
+    do action <- oneof (randomOffer : map actOnInvitation state)
+       randomSteps units (Test (action:actions) (wrap_pure action state))
+
+
+    
