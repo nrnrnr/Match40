@@ -10,12 +10,20 @@ import Student
 ----------------------------------------------------------------
 
 -- | What happens after an action
-
-data IAresult = Blocked IState Message
-              | Acted (IO (IState, IO ()))
+data IAresult
+    = Blocked IState Message
+    | Acted Invitation IState (IO ())
+        -- ^ Result is a new invitations, the rest of the invitation state,
+        -- and an IO action to perform if the transaction commits.
+        -- The invitation must be timestamped before being added to the state.
              
 type Message = String
 
+
+-- | timestamp any outstanding invitation and return invitation state
+finalIState :: IAresult -> IO IState
+finalIState (Blocked s _) = return s
+finalIState (Acted i is _) = timestamp i >>= return . (:is)
 
 
 -- | One student proposes partnership to another, offering an invitation
@@ -29,8 +37,7 @@ offer eligible by to invs
     | paired to = fail (toname ++ " already has a partner.")
     | not (eligible by to) = fail ("You are not eligible to work with " ++ toname)
     | Just i <- offered invs to by = accept i invs
-    | otherwise = Acted $ do this <- timestamp this
-                             return $ (this:others, CourseMail.offer by to)
+    | otherwise = Acted this others (CourseMail.offer by to)
   where toname = readableName to
         paired = isPaired invs
         fail msg = Blocked invs msg
