@@ -16,7 +16,7 @@ import Happstack.State ( Component(..), End, Proxy(..), Query, Update, Version
 
 import DB
 import Invitation
-import Types
+import Student
 import qualified ToyRoster
 
 -- | State
@@ -44,10 +44,6 @@ instance Component Database where
   type Dependencies Database = End
   initialValue = Database ToyRoster.roster (History []) Nothing
 
-
--- peekStudents :: Query Database Students 
--- peekStudents = STUDS <$> students <$> ask 
-
 peekStudents :: Query Database [Student]
 peekStudents = students <$> ask
 
@@ -72,6 +68,4 @@ $(mkMethods ''Database [ 'peekStudents, 'addStudent
 
 -- Use 'query PeekProject'
 -- and 'update (SetProject Project { projectName = "first", invitations = [] })'
-
-
 

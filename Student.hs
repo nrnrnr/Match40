@@ -1,10 +1,12 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Types
+module Student
   ( Student(..)
   , Enrollment(..)
   , FullName(..)
   , fullName
+  , firstname
+  , readableName
   )
 where
 import Data.Typeable
@@ -21,7 +23,7 @@ data Student = Student { name  :: FullName
                        , aboutMe :: String
                        , photo :: Maybe URL
                        , urlid :: String
-                       , status :: Enrollment
+                       , enrollment :: Enrollment
                        }
   deriving (Typeable, Eq, Ord)
 
@@ -41,3 +43,9 @@ fullName s = FullName { last = last, first = first, synonyms = [] }
     where last = reverse $ takeWhile nonBlank $ reverse s
           first = takeWhile nonBlank s
           nonBlank = not . Data.Char.isSpace
+
+readableName :: Student -> String
+readableName s = first fn ++ " " ++ last fn
+    where fn = name s
+
+firstname s = first (name s)
