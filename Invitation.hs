@@ -20,7 +20,7 @@ import Student
 -- | |Withdrawn| is declined by original offerer
 
 data Status = Offered | Accepted | Declined | Withdrawn
-  deriving (Typeable)
+  deriving (Typeable, Show)
 
 data Invitation = I { offeredBy :: Student
                     , offeredTo :: Student
@@ -28,6 +28,11 @@ data Invitation = I { offeredBy :: Student
                     , history   :: [(Status, UTCTime)]
                     }
   deriving (Typeable)
+
+instance Show Invitation where
+    show i =
+        show (offeredBy i) ++ "--(" ++ show (status i) ++ ")->" ++ show (offeredTo i)
+
 
 timestamp :: Invitation -> IO Invitation
 timestamp i = do now <- getCurrentTime

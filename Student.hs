@@ -27,6 +27,9 @@ data Student = Student { name  :: FullName
                        }
   deriving (Typeable, Eq, Ord)
 
+instance Show Student where
+    show s = "<" ++ readableName s ++ ">"
+
 data Enrollment = Enrolled | Dropped
   deriving (Typeable, Eq, Ord)
 

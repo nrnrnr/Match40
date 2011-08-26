@@ -47,12 +47,20 @@ offer eligible by to invs
         newOffer = I by to Offered [] 
             
                  
+-- | Accept an invitation
 accept :: Invitation -> IState -> IAresult
---accept inv invs =
+accept inv invs = Acted (inv { status = Accepted }) invs
+                  (CourseMail.accept (offeredTo inv) (offeredBy inv))
+
+-- | Decline an invitation
+decline :: Invitation -> IState -> IAresult
+decline inv invs = Acted (inv { status = Declined }) invs
+                  (CourseMail.decline (offeredTo inv) (offeredBy inv))
     
-accept = accept
-withdraw = withdraw
-decline = decline
+-- | Withdraw an invitation
+withdraw :: Invitation -> IState -> IAresult
+withdraw inv invs = Acted (inv { status = Withdrawn }) invs
+                    (CourseMail.withdraw (offeredBy inv) (offeredTo inv))
 
 
 -- at most one A -> B
