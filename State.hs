@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleContexts, GeneralizedNewtypeDeriving, 
-    MultiParamTypeClasses, TemplateHaskell, TypeFamilies #-}
+    MultiParamTypeClasses, TemplateHaskell, TypeFamilies,
+    FlexibleInstances #-}
 module State
 where
 import Control.Applicative ((<$>))
@@ -39,18 +40,15 @@ $(deriveSerialize ''Invitation)
 instance Version Status
 $(deriveSerialize ''Status)
 
-newtype MaybeProject = MP (Maybe Project)
-  deriving (Typeable)
-
-instance Version MaybeProject
-$(deriveSerialize ''MaybeProject)
-
-
 instance Component Database where
   type Dependencies Database = End
   initialValue = Database ToyRoster.roster (History []) Nothing
 
-peekStudents :: Query Database ([Student])
+
+-- peekStudents :: Query Database Students 
+-- peekStudents = STUDS <$> students <$> ask 
+
+peekStudents :: Query Database [Student]
 peekStudents = students <$> ask
 
 addStudent :: Student -> Update Database ()
@@ -62,8 +60,8 @@ peekHistory = projHistory <$> ask
 setHistory :: History -> Update Database ()
 setHistory h = modify $ \(Database s _ p) -> Database s h p
 
-peekProject :: Query Database MaybeProject
-peekProject = MP <$> project <$> ask
+peekProject :: Query Database (Maybe Project)
+peekProject = project <$> ask
 
 setProject :: Project -> Update Database ()
 setProject p = modify $ \(Database s h _) -> Database s h (Just p)
