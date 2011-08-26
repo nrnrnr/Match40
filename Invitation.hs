@@ -43,14 +43,47 @@ timestamp i = do now <- getCurrentTime
 
 type IState = [Invitation]
 -- ^ All invitations for a project, satisfying these invariants:
---     at most one A -> B
---     if A -> B and B -> A, then one must be declined or withdrawn
---     if A -> A, then status must be Accepted (flying solo)
+--     1. at most one A -> B
+--     2. if A -> B and B -> A, then one must be declined or withdrawn
+--     3. if A -> A, then status must be Accepted (flying solo)
 --
---     for all i, status i == fst (head (history i))
+--     4. for all i, status i == fst (head (history i))
 -- 
---     if A is part of an Accepted invitation, there are no outstanding
---     offers to A or by A
+--     5. if A is part of an Accepted invitation, there are no outstanding
+--        offers to A or by A
+
+invariant1, invariant2, invariant3, invariant4, invariant5 :: IState -> Bool
+
+invariant1 [] = True
+invariant1 (i:is) = null (filter (isByTo (offeredBy i) (offeredTo i)) is) &&
+                    invariant1 is
+
+invariant2 [] = True
+invariant2 (i:is) = ok i && invariant2 is
+    where okstatus (I { status = Declined  }) = True
+          okstatus (I { status = Withdrawn }) = True
+          okstatus _ = False
+          ok i = okstatus i ||
+                 all okstatus (filter (isByTo (offeredTo i) (offeredBy i)) is)
+
+invariant3 [] = True
+invariant3 (i:is) = invariant3 is &&
+                    if offeredBy i == offeredTo i then
+                        status i == Accepted
+                    else
+                        True
+
+invariant4 = all (\i -> not (null (history i)) && status i == fst (head (history i)))
+
+invariant5 is = all ok is
+    where ok i = if status i == Accepted then
+                     no_offers_to_or_by (offeredBy i) &&
+                     no_offers_to_or_by (offeredTo i)
+                 else
+                     True
+          no_offers_to_or_by student = not (any (offer_to_or_by student) is)
+          offer_to_or_by s i =
+              status i == Offered && (s == offeredBy i || s == offeredTo i)
 
 
 ----------------------------------------------------------------
