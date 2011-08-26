@@ -25,15 +25,16 @@ things compositional.
 
 -}
 
-data PendingAction = PA { old_is :: [Invitation] -- ^ untouched
-                        , new_is :: [Invitation] -- ^ awaiting timestamps
-                        , sends  :: IO ()        -- ^ emails to be sent
-                        , errors :: [String]     -- ^ messages on blocked actions
-                        }
-   -- this is an intermediate state pending some action
+data IntermediateState = IS { old_is :: [Invitation] -- ^ untouched
+                            , new_is :: [Invitation] -- ^ awaiting timestamps
+                            , sends  :: IO ()        -- ^ emails to be sent
+                            , errors :: [String]     -- ^ messages on blocked actions
+                            }
+   -- actions may trigger other actions, which pass through these kinds of states
 
 
-type Action = PendingAction -> PendingAction
+type Action = IntermediateState -> IntermediateState
+-- ^ the basic unit of doing things with invitations
 
 
 -- | What happens after an action
@@ -43,27 +44,31 @@ data IAResult
              
 type Message = String
 
+-- imagine eventually the following
+-- 
+-- atomically :: (IState -> IAResult) -> Update Database
+
+
+
 
 -- Normal actions are converted into a monadic result, but may be pure for testing
-wrap_monadic :: Action -> IState -> IAResult
-wrap_pure    :: Action -> IState -> IState
+wrap_monadic :: Action -> IState -> IAResult -- ^ implements public interfaces
+wrap_pure    :: Action -> IState -> IState   -- ^ used with quickcheck
 
 wrap_pure action is = map purestamp (new_is final) ++ old_is final
-    where final = action (start_action is)
+    where final = action (start_state is)
 
 wrap_monadic action is =
-    case final of
-      PA { errors = es@(_ : _) } -> Blocked is (concat $ intersperse "\n" $ es)
-      PA { errors = [] } -> Acted $
-          do stamped <- mapM timestamp (new_is final)
-             sends final
-             return (stamped ++ old_is final)
-    where final = action (start_action is)
-          final :: PendingAction
+    if null (errors final) then
+        Acted $ do stamped <- mapM timestamp (new_is final)
+                   sends final
+                   return (stamped ++ old_is final)
+    else
+        Blocked is (concat $ intersperse "\n" $ errors final)
+    where final = action (start_state is)
 
-
-start_action :: IState -> PendingAction
-start_action is = PA is [] (return ()) []
+start_state :: IState -> IntermediateState
+start_state is = IS is [] (return ()) []
 
 
 
@@ -101,33 +106,37 @@ offer :: (Student -> Student -> Bool) -- ^ Policy function says if students are 
       -> IState  -- ^ Current state of all invitations
       -> IAResult
 offer e by to = wrap_monadic $ offer' e by to
+
+-- BROKEN MESSAGES for student flying solo
+-- missing 'divorce' action
             
 offer' :: (Student -> Student -> Bool) -- ^ Policy function says if students are permitted to work together
       -> Student -- ^ Student making the offer
       -> Student -- ^ Student to whom the offer is made
       -> Action  -- ^ Current state of all invitations
-offer' eligible by to state@(PA old new sends errors)
+offer' eligible by to state@(IS old new sends errors)
     | paired by = fail "You already have a partner."
     | paired to = fail (toname ++ " already has a partner.")
     | not (eligible by to) = fail ("You are not eligible to work with " ++ toname)
     | Just i <- offered invs to by = accept' i state
-    | otherwise = PA others (this:new) (sends >> CourseMail.offer by to) errors
-  where toname = readableName to
-        paired = isPaired invs
-        invs = old ++ new
-        fail msg = (PA old new sends (msg:errors))
-        (this, others) = case splitByTo by to invs of
+    | by == to  = IS others (this { status = Accepted } : new) sends errors
+    | otherwise = IS others (this:new) (sends >> CourseMail.offer by to) errors
+  where (this, others) = case splitByTo by to old of
                            (Just i, is) -> (i, is)
                            (Nothing, is) -> (newOffer, is)
+        toname = readableName to
+        paired = isPaired invs
+        invs = old ++ new
+        fail msg = (IS old new sends (msg:errors))
         newOffer = I by to Offered [] 
-            
+             
                  
 -- | Accept an invitation
 accept :: Invitation -> IState -> IAResult
 accept inv = wrap_monadic $ accept' inv
 
 accept' :: Invitation -> Action
-accept' inv state@(PA old new sends errors) =
+accept' inv state@(IS old new sends errors) =
       merge declines $ merge withdraws $
       liftChange "Accepted an invitation, but could not find the offer"
                  (transition Offered Accepted)
@@ -154,6 +163,7 @@ decline' = liftChange "Declined an invitation, but could not find the offer"
 -- | Withdraw an invitation
 withdraw :: Invitation -> IState -> IAResult
 withdraw inv = wrap_monadic $ withdraw' inv
+
 withdraw' :: Invitation -> Action
 withdraw' = liftChange "Withdrew an invitation, but could not find the offer"
             (transition Offered Withdrawn) CourseMail.withdraw
@@ -162,7 +172,7 @@ withdraw' = liftChange "Withdrew an invitation, but could not find the offer"
 
 
 -- at most one A -> B
--- not both A -> B and B -> A unless at least one is declined
+-- not both A -> B and B -> A unless at least one is declined or withdrawn
 
 
 arbitraryTime = error "no peeking at timestamps during testing!"

@@ -29,7 +29,7 @@ headers = [ ("To",   Just . to)
 
 send :: Message -> IO ExitCode
 send msg =
-  do (Just inh, Just outh, _, pid) <-
+  do (Just inh, _, _, pid) <-
         P.createProcess (P.proc sendmail ["-t"])
              { P.std_in  = P.CreatePipe
              , P.std_out = P.Inherit

@@ -42,13 +42,20 @@ timestamp i = do now <- getCurrentTime
 
 
 type IState = [Invitation]
--- ^ Status of all invitations for a project
+-- ^ All invitations for a project, satisfying these invariants:
+--     at most one A -> B
+--     if A -> B and B -> A, then one must be declined or withdrawn
+--     if A -> A, then status must be Accepted (flying solo)
+--
+--     for all i, status i == fst (head (history i))
+-- 
+--     if A is part of an Accepted invitation, there are no outstanding
+--     offers to A or by A
 
 
+----------------------------------------------------------------
 
-isPair :: Invitation -> Bool
-isPair (I { status = Accepted }) = True
-isPair _ = False
+-- Useful predicates and things
 
 isPaired :: IState -> Student -> Bool
 isPaired invs student = any pairs invs
