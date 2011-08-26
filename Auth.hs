@@ -9,7 +9,7 @@ import Student
 
 getAuthedStudent :: (MonadIO m) => String -> m (Maybe Student)
 getAuthedStudent id =
-  do students <- listStudents
+  do students <- getStudents
      case filter (\s -> hash s == id) students of
        [s] -> return $ Just s
        _   -> return Nothing

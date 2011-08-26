@@ -62,19 +62,18 @@ peekProject = project <$> ask
 setProject :: Project -> Update Database ()
 setProject p = modify $ \(Database s h _) -> Database s h (Just p)
 
+-- Register functions with Happstack.State
 $(mkMethods ''Database [ 'peekStudents, 'addStudent
                        , 'peekHistory, 'setHistory
                        , 'peekProject, 'setProject]) 
 
-listStudents :: (MonadIO m) => m [Student]
-listStudents = query PeekStudents
+-- Abstract the use of 'query' so we don't have to use it everywhere
+getStudents :: (MonadIO m) => m [Student]
+getStudents = query PeekStudents
 
 getProject :: (MonadIO m) => m (Maybe Project)
 getProject = query PeekProject
 
 getHistory :: (MonadIO m) => m History
 getHistory = query PeekHistory
-
--- Use 'query PeekProject'
--- and 'update (SetProject Project { projectName = "first", invitations = [] })'
 
