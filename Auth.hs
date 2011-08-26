@@ -4,9 +4,8 @@ module Auth
 where
 import Control.Monad.Reader
 
-import Happstack.State  ( Query, query, mkMethods )
+import Happstack.State  ( query )
 
-import DB
 import State
 import Student
 
