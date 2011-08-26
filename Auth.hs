@@ -3,7 +3,7 @@ where
 import Control.Monad
 import Control.Monad.Trans
 
-import Happstack.Auth
+--import Happstack.Auth
 import Happstack.Server ( CookieLife(Session), addCookie, mkCookie
                        , readCookieValue
                        )
