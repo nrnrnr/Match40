@@ -4,7 +4,7 @@ module InvitationActions
 where
 
 import Invitation
-import Types
+import Student
 
 ----------------------------------------------------------------
 

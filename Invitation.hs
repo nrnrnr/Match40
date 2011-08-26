@@ -10,7 +10,7 @@ import Data.Time.Clock
 import Data.Typeable
 
 import Email
-import Types
+import Student
 
 -- | |Declined| is declined by recipient
 -- | |Withdrawn| is declined by original offerer

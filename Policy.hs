@@ -5,7 +5,7 @@ where
 
 import Invitation
 import qualified DB
-import Types
+import Student
 
 -- | Are two students eligible to work together?
 eligible :: DB.History -> Student -> Student -> Bool

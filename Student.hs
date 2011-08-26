@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 
-module Types
+module Student
   ( Student(..)
   , Enrollment(..)
   , FullName(..)

@@ -2,7 +2,7 @@ module ToyRoster
   ( roster
   )
 where
-import Types
+import Student
 
 roster :: [Student]
 

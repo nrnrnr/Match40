@@ -4,7 +4,7 @@ module DB
 where
 import Data.Typeable
 
-import Types
+import Student
 import Invitation
 
 -- | Project

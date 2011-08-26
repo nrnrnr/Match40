@@ -15,7 +15,7 @@ import Happstack.State ( Component(..), End, Proxy(..), Query, Update, Version
 
 import DB
 import Invitation
-import Types
+import Student
 import qualified ToyRoster
 
 -- | State
