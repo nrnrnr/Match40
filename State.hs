@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleContexts, GeneralizedNewtypeDeriving, 
-    MultiParamTypeClasses, TemplateHaskell, TypeFamilies #-}
+    MultiParamTypeClasses, TemplateHaskell, TypeFamilies, FlexibleInstances #-}
 module State
 where
 import Control.Applicative ((<$>))
