@@ -12,7 +12,7 @@ import Student
 -- | What happens after an action
 
 data IAresult = Blocked IState Message
-              | Acted IState (IO ())
+              | Acted (IO (IState, IO ()))
              
 type Message = String
 
@@ -29,7 +29,8 @@ offer eligible by to invs
     | paired to = fail (toname ++ " already has a partner.")
     | not (eligible by to) = fail ("You are not eligible to work with " ++ toname)
     | Just i <- offered invs to by = accept i invs
-    | otherwise = Acted (this:others) (CourseMail.offer by to)
+    | otherwise = Acted $ do this <- timestamp this
+                             return $ (this:others, CourseMail.offer by to)
   where toname = readableName to
         paired = isPaired invs
         fail msg = Blocked invs msg
@@ -39,6 +40,9 @@ offer eligible by to invs
         newOffer = I by to Offered [] 
             
                  
+accept :: Invitation -> IState -> IAresult
+--accept inv invs =
+    
 accept = accept
 withdraw = withdraw
 decline = decline

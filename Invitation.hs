@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 module Invitation 
   ( Status(..), Invitation(..), IState
+  , timestamp
   , isPaired
   , isByTo, isBy, isTo
   , splitByTo
@@ -27,6 +28,10 @@ data Invitation = I { offeredBy :: Student
                     , history   :: [(Status, UTCTime)]
                     }
   deriving (Typeable)
+
+timestamp :: Invitation -> IO Invitation
+timestamp i = do now <- getCurrentTime
+                 return $ i { history = (status i, now) : history i }
 
 
 type IState = [Invitation]
