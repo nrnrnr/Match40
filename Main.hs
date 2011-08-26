@@ -12,10 +12,13 @@ import Happstack.Server        ( Response, ServerPartT, ok, toResponse
                                , seeOther
                                )
 import Text.Blaze.Html4.Strict ( (!), html, head, body, title, p, toHtml
-                               , toValue, ol, li, a)
+                               , toValue, ol, li, a
+                               , Html
+                               )
 import Text.Blaze.Html4.Strict.Attributes (href)
 import Web.Routes              ( PathInfo(..), RouteT, showURL
-                               , runRouteT, Site(..), setDefault, mkSitePI)
+                               , runRouteT, liftRouteT
+                               , Site(..), setDefault, mkSitePI)
 import Web.Routes.TH           (derivePathInfo)
 import Web.Routes.Happstack    (implSite)
 
@@ -45,17 +48,18 @@ toyStudent = Student { name = fullName "Bruce Springsteen"
                      , enrollment = Enrolled
                      }
 
-homePage :: [Student] -> RouteT Sitemap (ServerPartT IO) Response
-homePage students = 
-    do ok $ toResponse $ 
+homePage :: RouteT Sitemap (ServerPartT IO) Response
+homePage = 
+    do students <- liftRouteT $ liftIO getStudents
+       ok $ toResponse $ 
           html $ do
             head $ title $ (toHtml "Welcome Home!")
             body $ do
-              ol $ mconcat students
+              ol $ mconcat (map mkStudent students)
     where
+      mkStudent :: Student -> Html
       mkStudent s =
-          do return $ li $ a ! href (toValue "blah") $
-                        toHtml $ "Student blah blah"
+          li $ a ! href (toValue "blah") $ toHtml $ "Student blah blah"
           -- do url <- showURL (Private pSiD) 
              -- return $ li $ a ! href (toValue url) $  
                         -- toHtml $ "Student " ++ (show $ pSiD) 

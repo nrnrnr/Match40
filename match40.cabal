@@ -1,0 +1,15 @@
+Name:                match40
+Version:             0.1
+Synopsis:            Find a partner!
+Category:            Courseware
+Build-type:          Simple
+Cabal-version:       >=1.2
+
+Executable testbench
+  Main-is:           Main.hs
+  Build-depends:     base, process, containers, time, filepath, directory,
+                     random, happstack (>=6.0.3), happstack-stack (>=6.1.1),
+                     web-routes (>= 0.25),
+                     web-routes-th (>= 0.20.4),
+                     web-routes-happstack (>= 0.22.2), base64-string.
+
