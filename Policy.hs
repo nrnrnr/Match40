@@ -7,6 +7,10 @@ module Policy
   )
 where
 
+import Data.HashTable (hashString)
+
+import Codec.Binary.Base64.String (encode)
+
 import Invitation
 import qualified DB
 import Student
@@ -23,4 +27,7 @@ signature = "The COMP 40 matchmaker"
 
 baseURL = "http://match40.cs.tufts.edu"
 
-loginURL student = "(URL cloudy; try again later)"
+loginURL student = "private/" ++ (readable $ encode $ show $ hashString tohash)
+  where
+    readable = filter (\c -> c `elem` ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'])
+    tohash = readableName student ++ email student 
