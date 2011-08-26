@@ -10,10 +10,10 @@ import DB
 import State
 import Student
 
--- getAuthedStudent :: (MonadIO m) => String -> m (Maybe Student) 
--- getAuthedStudent id = 
-  -- do students <- query PeekStudents 
-     -- case filter (\s -> urlid s == id) students of 
-       -- [s] -> return $ Just s 
-       -- _   -> return Nothing 
+getAuthedStudent :: (MonadIO m) => String -> m (Maybe Student)
+getAuthedStudent id =
+  do students <- query PeekStudents
+     case filter (\s -> hash s == id) students of
+       [s] -> return $ Just s
+       _   -> return Nothing
 
