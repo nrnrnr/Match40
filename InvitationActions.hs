@@ -3,6 +3,7 @@ module InvitationActions
   )
 where
 
+import qualified CourseMail
 import Invitation
 import Student
 
@@ -28,7 +29,7 @@ offer eligible by to invs
     | paired to = fail (toname ++ " already has a partner.")
     | not (eligible by to) = fail ("You are not eligible to work with " ++ toname)
     | Just i <- offered invs to by = accept i invs
-    | otherwise = create_or_resurrect
+    | otherwise = Acted (this:others) (CourseMail.offer by to)
   where toname = readableName to
         paired = isPaired invs
         fail msg = Blocked invs msg
@@ -36,8 +37,6 @@ offer eligible by to invs
                            (Just i, is) -> (i, is)
                            (Nothing, is) -> (newOffer, is)
         newOffer = I by to Offered [] 
-
-        create_or_resurrect = error "unimp"
             
                  
 accept = accept

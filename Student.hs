@@ -5,6 +5,7 @@ module Student
   , Enrollment(..)
   , FullName(..)
   , fullName
+  , firstname
   , readableName
   )
 where
@@ -46,3 +47,5 @@ fullName s = FullName { last = last, first = first, synonyms = [] }
 readableName :: Student -> String
 readableName s = first fn ++ " " ++ last fn
     where fn = name s
+
+firstname s = first (name s)
