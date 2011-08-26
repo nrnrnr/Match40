@@ -20,7 +20,7 @@ data Student = Student { name  :: FullName
                        , email :: String
                        , aboutMe :: String
                        , photo :: Maybe URL
-                       , password :: String
+                       , urlid :: String
                        , status :: Enrollment
                        }
   deriving (Typeable, Eq, Ord)
