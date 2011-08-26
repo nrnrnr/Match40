@@ -5,6 +5,7 @@ module Types
   , Enrollment(..)
   , FullName(..)
   , fullName
+  , readableName
   )
 where
 import Data.Typeable
@@ -41,3 +42,7 @@ fullName s = FullName { last = last, first = first, synonyms = [] }
     where last = reverse $ takeWhile nonBlank $ reverse s
           first = takeWhile nonBlank s
           nonBlank = not . Data.Char.isSpace
+
+readableName :: Student -> String
+readableName s = first fn ++ " " ++ last fn
+    where fn = name s

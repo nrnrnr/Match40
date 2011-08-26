@@ -10,7 +10,7 @@ import Invitation
 -- | Project
 
 data Project = Project { projectName :: String
-                       , invitations :: [Invitation]
+                       , activeInvitations :: [Invitation]
                        }
   deriving (Typeable)
 
@@ -29,4 +29,9 @@ projHistory (Database _ h _) = h
 project :: Database -> Maybe Project
 project (Database _ _ p) = p
 
-
+-- | Produce a list of all invitations for the current project,
+-- even those that have been declined.
+invitations :: Database -> [Invitation]
+invitations db = case project db of
+                   Nothing -> []
+                   Just p  -> activeInvitations p
