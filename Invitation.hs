@@ -4,8 +4,10 @@ module Invitation
   , timestamp
   , isPaired
   , isByTo, isBy, isTo
+  , hasStatus
   , splitByTo
   , offered
+  , differentPairs
   )
 where
 
@@ -20,7 +22,7 @@ import Student
 -- | |Withdrawn| is declined by original offerer
 
 data Status = Offered | Accepted | Declined | Withdrawn
-  deriving (Typeable, Show)
+  deriving (Typeable, Show, Eq)
 
 data Invitation = I { offeredBy :: Student
                     , offeredTo :: Student
@@ -74,3 +76,12 @@ splitByTo by to invs =
       ([i], is) -> (Just i,  is)
       ([],  is) -> (Nothing, is)
       _ -> error "duplicate invitations in set"
+
+-- | Do two invitations involve different pairs of students?
+differentPairs :: Invitation -> Invitation -> Bool
+differentPairs i1 i2 = (toBy i1 /= toBy i2 && toBy i1 /= swap (toBy i2))
+    where toBy i = (offeredTo i, offeredBy i)
+          swap (x, y) = (y, x)
+
+hasStatus :: Invitation -> Status -> Bool
+hasStatus i s = status i == s
