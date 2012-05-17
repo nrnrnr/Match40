@@ -50,10 +50,11 @@ $(deriveSafeCopy 0 'base ''Phone)
 $(deriveSafeCopy 0 'base ''Email)
 
 
-data Profile = Profile { roles :: [Controlled Role]
-                       , uid  :: UserIdent
-                       , auth :: Authentication
-                       , name :: Fullname
+-- | Information stored about a user which that user can change.
+-- (N.B. Admin controls roles but user controls their visibility.)
+data Profile = Profile { auth  :: Authentication
+                       , name  :: Fullname
+                       , roles :: [Controlled Role]
                        , schedulePrefs :: Controlled ()
                        , portrait :: Controlled (Maybe Photo)
                        , thumbnail :: Controlled (Maybe Photo)
@@ -93,10 +94,13 @@ noPartnerData = PartnerData { orientation = Nothing
                             }
 
 
-data User = User { profile :: Profile
-                 , synonyms :: [String]
-                 , partnerData :: PartnerData
+-- | What we know about a user.  Except for the profile,
+-- only an instructor or administrator can change what's here.
+data User = User { uid      :: UserIdent
                  , otherIds :: [OtherIdent]
+                 , synonyms :: [String]
+                 , profile  :: Profile
+                 , partnerData :: PartnerData
                  }
 $(deriveSafeCopy 0 'base ''User)
 
@@ -107,7 +111,6 @@ newUser :: String -> [Role] -> IO User
 newUser email roles =
   do auth <- passwordPrompt $ Just $ "Password for " ++ show name ++ ":"
      let prof = Profile { roles = map private roles
-                        , uid = SISEmail email
                         , auth = auth
                         , name = name
                         , schedulePrefs = public ()
@@ -117,7 +120,10 @@ newUser email roles =
                         , phone = private Nothing
                         , email = public Nothing
                         }
-     return $ User { profile = prof, synonyms = [], partnerData = noPartnerData
+     return $ User { profile = prof
+                   , synonyms = []
+                   , partnerData = noPartnerData
+                   , uid = SISEmail email
                    , otherIds = [ ]
                    }
  where name = nameOfEmail email
