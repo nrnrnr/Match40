@@ -3,7 +3,7 @@ module User
        ( Role(..), Controlled(..), TimeOfRole(..)
        , User(..), Profile(..), Fullname(..), Photo(..), Phone(..), Email(..)
        , PartnerData(..), Orientation(..), SocialNetwork(..), PartnerBreadth(..)
-       , newUtln, newCs
+       , newUser, nameOfEmail
        , parseName, noPartnerData
        )
 where
@@ -37,6 +37,9 @@ data Fullname = Fullname { firstName :: String -- ^ student's preferred name
                          , fullName :: String -- ^ official full name
                          }
 $(deriveSafeCopy 0 'base ''Fullname)
+  
+instance Show Fullname where
+  show name = firstName name ++ " " ++ lastName name
 
 newtype Photo = Photo { unPhoto :: String } -- ^ pathname to somewhere
 newtype Phone = Phone { unPhone :: String }
@@ -93,19 +96,20 @@ noPartnerData = PartnerData { orientation = Nothing
 data User = User { profile :: Profile
                  , synonyms :: [String]
                  , partnerData :: PartnerData
+                 , otherIds :: [OtherIdent]
                  }
 $(deriveSafeCopy 0 'base ''User)
 
 
 
 
-newUser :: UserIdent -> String -> [Role] -> IO User
-newUser ident name roles =
-  do auth <- passwordPrompt $ Just $ "Password for " ++ show ident ++ ":"
+newUser :: String -> [Role] -> IO User
+newUser email roles =
+  do auth <- passwordPrompt $ Just $ "Password for " ++ show name ++ ":"
      let prof = Profile { roles = map private roles
-                        , uid = ident
+                        , uid = SISEmail email
                         , auth = auth
-                        , name = parseName name
+                        , name = name
                         , schedulePrefs = public ()
                         , portrait = public Nothing
                         , thumbnail = public Nothing
@@ -113,11 +117,16 @@ newUser ident name roles =
                         , phone = private Nothing
                         , email = public Nothing
                         }
-     return $ User prof [] noPartnerData
-  
-newUtln, newCs :: String -> String -> [Role] -> IO User
-newUtln = newUser . UTLN
-newCs   = newUser . CsUid
+     return $ User { profile = prof, synonyms = [], partnerData = noPartnerData
+                   , otherIds = [ ]
+                   }
+ where name = nameOfEmail email
+
+nameOfEmail :: String -> Fullname  
+nameOfEmail = parseName . map convert . takeWhile (/= '@')
+  where convert '_' = '-'
+        convert '.' = ' '
+        convert c = c
 
 
 public, private :: a -> Controlled a
