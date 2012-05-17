@@ -7,9 +7,15 @@ Cabal-version:       >=1.2
 
 Executable testbench
   Main-is:           Main.hs
-  Build-depends:     base, process, containers, time, filepath, directory,
-                     random, happstack (>=6.0.3), happstack-stack (>=6.1.1),
-                     web-routes (>= 0.25),
-                     web-routes-th (>= 0.20.4),
-                     web-routes-happstack (>= 0.22.2), base64-string.
+  Build-depends:     base,
+                     process,
+                     containers,
+                     time,
+                     filepath,
+                     directory,
+                     random,
+                     happstack-server (>=7.0.1),
+                     bcrypt (>=0.0.3),
+                     safecopy (>=0.6.1),
+                     acid-state (>=0.6.3)
 
