@@ -1,9 +1,10 @@
 {-# LANGUAGE TypeFamilies, DeriveDataTypeable, TemplateHaskell #-}
 module User
        ( Role(..), Controlled(..), TimeOfRole(..)
-       , Profile(..), Fullname(..), Photo(..), Phone(..), Email(..)
+       , User(..), Profile(..), Fullname(..), Photo(..), Phone(..), Email(..)
+       , PartnerData(..), Orientation(..), SocialNetwork(..), PartnerBreadth(..)
        , newUtln, newCs
-       , parseName
+       , parseName, noPartnerData
        )
 where
 
@@ -65,23 +66,56 @@ parseName full = Fullname first last full
         last  = reverse . takeWhile (not . isSpace) . reverse $ full
 
 
+data Orientation = FacesOut | FacesIn
+data SocialNetwork = ManyFriendsIn Course
+                   | FewFriendsIn Course
+data PartnerBreadth = AnyPartner | LimitedPartner
+  -- ^ @LimitedPartner@ is for known risk groups like first-generation
+  -- college students.  The software will try to avoid pairing two
+  -- people tagged LimitedPartner
+$(deriveSafeCopy 0 'base ''Orientation)
+$(deriveSafeCopy 0 'base ''SocialNetwork)
+$(deriveSafeCopy 0 'base ''PartnerBreadth)
 
-newUser :: UserIdent -> String -> [Role] -> IO Profile
+-- | Data provided by instructors to better match students.
+data PartnerData = PartnerData { orientation :: Maybe Orientation
+                               , socialNetwork :: [SocialNetwork]
+                               , breadth :: Maybe PartnerBreadth
+                               } 
+$(deriveSafeCopy 0 'base ''PartnerData)
+noPartnerData :: PartnerData
+noPartnerData = PartnerData { orientation = Nothing
+                            , socialNetwork = []
+                            , breadth = Nothing
+                            }
+
+
+data User = User { profile :: Profile
+                 , synonyms :: [String]
+                 , partnerData :: PartnerData
+                 }
+$(deriveSafeCopy 0 'base ''User)
+
+
+
+
+newUser :: UserIdent -> String -> [Role] -> IO User
 newUser ident name roles =
   do auth <- passwordPrompt $ Just $ "Password for " ++ show ident ++ ":"
-     return Profile { roles = map private roles
-                    , uid = ident
-                    , auth = auth
-                    , name = parseName name
-                    , schedulePrefs = public ()
-                    , portrait = public Nothing
-                    , thumbnail = public Nothing
-                    , blurb = Nothing
-                    , phone = private Nothing
-                    , email = public Nothing
-                    }
+     let prof = Profile { roles = map private roles
+                        , uid = ident
+                        , auth = auth
+                        , name = parseName name
+                        , schedulePrefs = public ()
+                        , portrait = public Nothing
+                        , thumbnail = public Nothing
+                        , blurb = Nothing
+                        , phone = private Nothing
+                        , email = public Nothing
+                        }
+     return $ User prof [] noPartnerData
   
-newUtln, newCs :: String -> String -> [Role] -> IO Profile
+newUtln, newCs :: String -> String -> [Role] -> IO User
 newUtln = newUser . UTLN
 newCs   = newUser . CsUid
 

@@ -19,9 +19,6 @@ data Database = Database { users :: [User]
                          , courseData :: [CourseData]
                          }
 
-data User = User Profile
-$(deriveSafeCopy 0 'base ''User)
-
 $(deriveSafeCopy 0 'base ''Database)
   
 emptyDatabase :: Database
