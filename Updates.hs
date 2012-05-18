@@ -7,6 +7,8 @@ import Control.Monad.Reader                  ( ask )
 import Control.Applicative                   ( (<$>) )
 
 import Data.Acid
+import Data.SafeCopy
+import Data.Typeable
 
 import Auth
 import Identity
@@ -15,9 +17,12 @@ import User
 
 
 data UpdateResult = UpdateOK | UserNotFound UserIdent
+  deriving (Typeable)
+$(deriveSafeCopy 0 'base ''UpdateResult)
 
 type UserUpdate a = UserIdent -> a -> Update Database UpdateResult
 
+{-
 newPassword  :: UserUpdate Authentication
 newFirstname :: UserUpdate String
 newPortrait  :: UserUpdate Photo
@@ -25,6 +30,14 @@ newThumbnail :: UserUpdate Photo
 newBlurb     :: UserUpdate String
 newPhone     :: UserUpdate Phone
 newEmail     :: UserUpdate Email
+-}
+newPassword  :: UserIdent -> Authentication -> Update Database UpdateResult
+newFirstname :: UserIdent -> String         -> Update Database UpdateResult
+newPortrait  :: UserIdent -> Photo          -> Update Database UpdateResult
+newThumbnail :: UserIdent -> Photo          -> Update Database UpdateResult
+newBlurb     :: UserIdent -> String         -> Update Database UpdateResult
+newPhone     :: UserIdent -> Phone          -> Update Database UpdateResult
+newEmail     :: UserIdent -> Email          -> Update Database UpdateResult
 
 profileUpdate :: (a -> Profile -> Profile) -> UserUpdate a
 profileUpdate addToProf userid a = do
@@ -54,3 +67,9 @@ newPhone = profileUpdate $ \ph p -> p { phone = inject ph (phone p) }
 newEmail = profileUpdate $ \em p -> p { email = inject em (email p) }
 newFirstname = profileUpdate $ \first p -> p { name = newFirst (name p) first }
   where newFirst full first = full { firstName = first }
+
+
+$(makeAcidic ''Database [ 'newPassword, 'newFirstname, 'newPortrait
+                        , 'newThumbnail, 'newBlurb, 'newPhone, 'newEmail
+                        ])
+
