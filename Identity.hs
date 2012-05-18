@@ -8,6 +8,7 @@ import Data.SafeCopy
   
 -- | A user's identity is determined by the unique Tufts email address stored in SIS
 data UserIdent = SISEmail String
+  deriving (Eq)
 $(deriveSafeCopy 0 'base ''UserIdent)  
 
 instance Show UserIdent where

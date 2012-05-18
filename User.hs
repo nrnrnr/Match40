@@ -31,6 +31,13 @@ data Controlled a -- ^ Controlled visibility
   | ClassmateSees  { roleTime :: TimeOfRole, unControlled :: a }
   | TASees         { roleTime :: TimeOfRole, unControlled :: a }
 $(deriveSafeCopy 0 'base ''Controlled)
+
+instance Functor Controlled where
+  fmap f (UserSees a) = UserSees (f a)
+  fmap f (InstructorSees time a) = InstructorSees time (f a)
+  fmap f (ClassmateSees time a) = ClassmateSees time (f a)
+  fmap f (TASees time a) = TASees time (f a)
+
     
 data Fullname = Fullname { firstName :: String -- ^ student's preferred name
                          , lastName :: String
