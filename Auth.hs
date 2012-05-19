@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, DeriveDataTypeable, TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies, DeriveDataTypeable, TemplateHaskell, DoAndIfThenElse #-}
 module Auth
        ( Authentication
        , fromPassword
@@ -8,7 +8,7 @@ module Auth
 where
 
 import Control.Exception
-import Data.ByteString.Char8 hiding (putStr, getLine)
+import Data.ByteString.Char8 hiding (putStr, putStrLn, getLine)
 import Data.Maybe
 import Data.SafeCopy
 import System.IO
@@ -32,13 +32,22 @@ fromPassword s =
 validateAuth :: Authentication -> String -> Bool
 validateAuth auth = validatePassword (hashedPassword auth) . p
 
+
+
 passwordPrompt :: Maybe String -> IO Authentication
 passwordPrompt prompt = do
-  putStr $ fromMaybe "Password: " prompt
-  hFlush stdout
-  pass <- withEcho False getLine
-  putChar '\n'
-  fromPassword pass
+  pass  <- getPrompt $ fromMaybe "Password:" prompt ++ " "
+  pass' <- getPrompt "Again: "
+  if pass /= pass' then
+    putStrLn "Inconsistent passwords" >> passwordPrompt prompt
+  else
+    fromPassword pass
+ where
+  getPrompt s = do putStr s
+                   hFlush stdout
+                   pass <- withEcho False getLine
+                   putChar '\n'
+                   return pass
 
 withEcho :: Bool -> IO a -> IO a
 withEcho echo action = do
