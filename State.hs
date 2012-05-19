@@ -5,11 +5,8 @@ module State ( Database(..), User(..)
 where
 
 import Data.Acid
-
-import Control.Monad.State                   ( get, put )
-import Control.Monad.Reader                  ( ask )
-import Control.Applicative                   ( (<$>) )
 import Data.SafeCopy
+import Data.Typeable
 
 import Course
 import User
@@ -18,9 +15,9 @@ data Database = Database { users :: [User]
                          , courses :: [Course]
                          , courseData :: [CourseData]
                          }
+  deriving (Typeable)
 
 $(deriveSafeCopy 0 'base ''Database)
   
 emptyDatabase :: Database
 emptyDatabase = Database [] [] []
-

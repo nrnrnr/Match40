@@ -111,6 +111,9 @@ data User = User { uid      :: UserIdent
                  }
 $(deriveSafeCopy 0 'base ''User)
 
+instance Show User where
+  show u = show (name $ profile u) ++ " <" ++ show (uid u) ++ ">"
+  
 
 
 

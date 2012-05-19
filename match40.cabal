@@ -3,10 +3,9 @@ Version:             0.1
 Synopsis:            Find a partner!
 Category:            Courseware
 Build-type:          Simple
-Cabal-version:       >=1.2
+Cabal-version:       >=1.8
 
-Executable testbench
-  Main-is:           Main.hs
+Library
   Build-depends:     base,
                      process,
                      containers,
@@ -14,8 +13,53 @@ Executable testbench
                      filepath,
                      directory,
                      random,
-                     happstack-server (>=7.0.1),
+
+                     acid-state (>=0.6.3),
+                     bytestring (>=0.9),
                      bcrypt (>=0.0.3),
                      safecopy (>=0.6.1),
-                     acid-state (>=0.6.3)
+                     time == 1.2.*,
+                     unix ==2.4.*
+
+Executable match40
+  Main-is:           Command40.hs
+  Build-depends:     base,
+                     process,
+                     containers,
+                     time,
+                     filepath,
+                     directory,
+                     random,
+
+                     acid-state (>=0.6.3),
+                     bytestring (>=0.9),
+                     bcrypt (>=0.0.3),
+                     mtl == 2.0.*,
+                     network == 2.3.*,
+                     safecopy (>=0.6.1),
+                     time == 1.2.*,
+                     unix ==2.4.*
+
+Executable server40
+  Main-is:           ToyServer.lhs
+  Build-depends:     base, 
+                     process,
+                     containers,
+                     time,
+                     filepath,
+                     directory,
+                     random,
+
+                     acid-state (>=0.6.3),
+                     blaze-html == 0.4.*,
+                     bytestring (>=0.9),
+                     bcrypt (>=0.0.3),
+                     happstack-server == 7.0.*,
+                     happstack-lite == 7.2.*,
+                     mtl == 2.0.*,
+                     network == 2.3.*,
+                     safecopy (>=0.6.1),
+                     text == 0.11.*,
+                     time == 1.2.*,
+                     unix ==2.4.*
 

@@ -1,5 +1,10 @@
 {-# LANGUAGE TypeFamilies, DeriveDataTypeable, TemplateHaskell, RankNTypes #-}
 module Updates
+       ( NewPassword(..), NewFirstname(..), NewPortrait(..)
+       , NewThumbnail(..), NewBlurb(..) , NewPhone(..), NewEmail(..)
+       , AddUser(..)
+       , openLocal, openRemote
+       )
 where
   
 import Control.Monad.State                   ( get, put )
@@ -7,8 +12,13 @@ import Control.Monad.Reader                  ( ask )
 import Control.Applicative                   ( (<$>) )
 
 import Data.Acid
+import Data.Acid.Remote
+import Data.List
 import Data.SafeCopy
 import Data.Typeable
+
+import Network
+import System.Posix.Files
 
 import Auth
 import Identity
@@ -16,8 +26,10 @@ import State
 import User
 
 
-data UpdateResult = UpdateOK | UserNotFound UserIdent
-  deriving (Typeable)
+data UpdateResult = UpdateOK
+                  | UserNotFound UserIdent
+                  | DuplicateUser User
+  deriving (Typeable, Show)
 $(deriveSafeCopy 0 'base ''UpdateResult)
 
 type UserUpdate a = UserIdent -> a -> Update Database UpdateResult
@@ -69,7 +81,31 @@ newFirstname = profileUpdate $ \first p -> p { name = newFirst (name p) first }
   where newFirst full first = full { firstName = first }
 
 
+addUser :: User -> Update Database UpdateResult
+addUser u = do
+  db <- get
+  case find ((== uid u) . uid) (users db) of
+    Just user -> return $ DuplicateUser user
+    Nothing   -> do { put $ db { users = u : users db }; return UpdateOK }
+
+
 $(makeAcidic ''Database [ 'newPassword, 'newFirstname, 'newPortrait
                         , 'newThumbnail, 'newBlurb, 'newPhone, 'newEmail
+                        , 'addUser
                         ])
 
+-----------------------------
+
+
+
+openLocal :: IO (AcidState Database)
+openLocal = openLocalState emptyDatabase
+
+restrict :: String -> IO ()
+restrict socket = setFileMode socket owner
+  where owner = ownerReadMode `unionFileModes` ownerWriteMode
+
+openRemote :: String -> IO (AcidState Database)
+openRemote socket = 
+  do restrict socket
+     openRemoteState "localhost" (UnixSocket socket)
