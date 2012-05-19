@@ -4,11 +4,11 @@ where
 import Data.Ratio
 import qualified Data.Vector as V
 import Data.Vector ((!))
-import Decimal
+import DigitList
 
 rationalWords :: Rational -> [String]
 rationalWords r = map ((wordlist !) . fromInteger) $
-                  digits (toInteger nwords) r (next r)
+                  fromInterval (toInteger nwords) r (next r)
   where next r = (numerator r + 1) % denominator r
 
 nwords = V.length wordlist
