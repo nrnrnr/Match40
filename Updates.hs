@@ -3,7 +3,7 @@ module Updates
        ( NewPassword(..), NewFirstname(..), NewPortrait(..)
        , NewThumbnail(..), NewBlurb(..) , NewPhone(..), NewEmail(..)
        , AddUser(..)
-       , openLocal, openRemote
+       , openLocal, openRemote, openLocalFrom
        )
 where
   
@@ -22,9 +22,10 @@ import System.Posix.Files
 
 import Auth
 import Identity
-import State
+import State hiding (UserNotFound)
 import User
 
+-- XXX TODO user lookup here and in State module
 
 data UpdateResult = UpdateOK
                   | UserNotFound UserIdent
@@ -100,6 +101,9 @@ $(makeAcidic ''Database [ 'newPassword, 'newFirstname, 'newPortrait
 
 openLocal :: IO (AcidState Database)
 openLocal = openLocalState emptyDatabase
+
+openLocalFrom :: FilePath -> IO (AcidState Database)
+openLocalFrom path = openLocalStateFrom path emptyDatabase
 
 restrict :: String -> IO ()
 restrict socket = setFileMode socket owner
