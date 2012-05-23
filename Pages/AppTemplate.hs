@@ -2,7 +2,7 @@
 
 module Pages.AppTemplate where
   
-import           Text.Blaze ((!))
+import           Text.Blaze.Html5 ((!))
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
