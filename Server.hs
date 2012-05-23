@@ -1,11 +1,13 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module Server 
-       ( login
+       ( login, shortUsersPage
        )
 where
 
 
 import Control.Applicative ((<$>), optional)
+import Data.Acid
+import Data.Acid.Advanced
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text.Lazy (unpack)
@@ -14,6 +16,11 @@ import Text.Blaze.Html5 (Html, (!), a, form, input, p, toHtml, label)
 import Text.Blaze.Html5.Attributes (action, enctype, href, name, size, type_, value)
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
+
+import Pages.User
+import State
+import Updates
+import User
 
 login :: (Text -> Html -> Response) -> ServerPart Response
 login template = msum [ view, update, lossage ]
@@ -25,13 +32,13 @@ login template = msum [ view, update, lossage ]
                     H.p "Sign in:"
                     form ! action "/login" ! enctype "multipart/form-data" ! A.method "POST" $ do
                     label ! A.for "userid" $ "Your user id: "
-                    input ! type_ "text" ! A.id "userid" ! name "userid"
+                    input ! type_ "text" ! A.id "userid" ! A.name "userid"
                     " (this is often your Tufts email address)"
                     H.br
                     label ! A.for "passphrase" $ "Your passphrase: "
-                    input ! type_ "text" ! A.id "passphrase" ! name "passphrase"
+                    input ! type_ "text" ! A.id "passphrase" ! A.name "passphrase"
                     H.br
-                    input ! type_ "submit" ! name "signin"
+                    input ! type_ "submit" ! A.name "signin"
                           ! value "Sign in"
 
       update :: ServerPart Response
