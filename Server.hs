@@ -53,3 +53,16 @@ login template = msum [ view, update, lossage ]
       lossage = seeOther ("/lossage" :: String) (toResponse ())
       
 
+shortUsersPage :: (Text -> Html -> Response) -> AcidState Database
+               -> ServerPart Response
+shortUsersPage template acid = do
+  users <- query' acid PeekUsers
+  shortUsers template [Admin] users
+
+
+shortUsers :: (Text -> Html -> Response) -> [Role] -> [User] -> ServerPart Response
+shortUsers template roles users = 
+  ok $ template "User List" $ do
+    H.p $ H.toHtml $ "The system has " ++ show (length users) ++ " users."
+    mapM_ (H.p . renderUserLineFrom roles) users
+

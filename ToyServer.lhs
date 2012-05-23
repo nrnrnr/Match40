@@ -51,6 +51,7 @@ Here is our web application:
 >   , dir "upload"  $ upload
 >   , dir "login"   $ login template
 >   , dir "lossage" $ return $ template "lossage" (H.p "Something bad happened.")
+>   , dir "users"   $ shortUsersPage template acid
 >   , homePage
 >   ]
 
@@ -97,6 +98,7 @@ We can then use that template like this:
 >            H.p $ a ! href "/files"         $ "file serving"
 >            H.p $ a ! href "/upload"        $ "file uploads"
 >            H.p $ a ! href "/login"         $ "sign in"
+>            H.p $ a ! href "/users"         $ "user list"
 
 `ok` tells the server to return the page with the HTTP response code '200 OK'. There are other helper functions like `notFound` and `seeOther` for other response codes. Or use `setResponseCode` to specify a response code by number.
 

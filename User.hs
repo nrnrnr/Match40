@@ -23,6 +23,13 @@ data Role = Instructor Course
           | Admin
 $(deriveSafeCopy 0 'base ''Role)
 
+instance Show Role where
+  show (Instructor c) = show c ++ " instructor"
+  show (Student c) = show c ++ " student"
+  show (TA c)      = show c ++ " TA"
+  show (Former r)  = "former " ++ show r
+  show Admin       = "really cool hacker"
+
 data TimeOfRole = AnyTime | Current | Past
 $(deriveSafeCopy 0 'base ''TimeOfRole)
 
