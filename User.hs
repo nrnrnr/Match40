@@ -10,7 +10,8 @@ where
 
 import Data.Char
 import Data.SafeCopy
-  
+import Data.Typeable  
+
 import Auth
 import Course
 import Identity
@@ -109,6 +110,7 @@ data User = User { uid      :: UserIdent
                  , profile  :: Profile
                  , partnerData :: PartnerData
                  }
+  deriving (Typeable)
 $(deriveSafeCopy 0 'base ''User)
 
 instance Show User where

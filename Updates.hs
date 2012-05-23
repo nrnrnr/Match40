@@ -3,6 +3,7 @@ module Updates
        ( NewPassword(..), NewFirstname(..), NewPortrait(..)
        , NewThumbnail(..), NewBlurb(..) , NewPhone(..), NewEmail(..)
        , AddUser(..)
+       , PeekUsers(..)
        , openLocal, openRemote, openLocalFrom
        )
 where
@@ -89,10 +90,12 @@ addUser u = do
     Just user -> return $ DuplicateUser user
     Nothing   -> do { put $ db { users = u : users db }; return UpdateOK }
 
+peekUsers :: Query Database [User]
+peekUsers = fmap users ask
 
 $(makeAcidic ''Database [ 'newPassword, 'newFirstname, 'newPortrait
                         , 'newThumbnail, 'newBlurb, 'newPhone, 'newEmail
-                        , 'addUser
+                        , 'addUser, 'peekUsers
                         ])
 
 -----------------------------
