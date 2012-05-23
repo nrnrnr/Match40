@@ -15,7 +15,13 @@ And then we have some imports:
 > import qualified Text.Blaze.Html5 as H
 > import qualified Text.Blaze.Html5.Attributes as A
 
+> import Data.Acid
+> import Data.Acid.Local (createCheckpointAndClose)
+> import Control.Exception (bracket)
+
 > import Server
+> import State
+> import Updates
 
 <h3><a name="starting">Starting the Server</a></h3>
 
@@ -24,7 +30,9 @@ is an optional configuration parameter. The second argument is our web
 application:
 
 > main :: IO ()
-> main = serve Nothing myApp
+> main = do bracket (openLocalFrom "test-state")
+>                   (createCheckpointAndClose)
+>                   (serve Nothing . myApp)
 
 A web application has the type `ServerPart Response`. You can think of
 `ServerPart` as the web equivalent of the `IO` monad.
@@ -33,8 +41,8 @@ A web application has the type `ServerPart Response`. You can think of
 
 Here is our web application:
 
-> myApp :: ServerPart Response
-> myApp = msum
+> myApp :: AcidState Database -> ServerPart Response
+> myApp acid = msum
 >   [ dir "echo"    $ echo
 >   , dir "query"   $ queryParams
 >   , dir "form"    $ formPage
