@@ -16,17 +16,25 @@ import Identity
 
 
 newtype Year = Year { unYear :: Int }
+  deriving (Eq, Ord)
+
 $(deriveSafeCopy 0 'base ''Year)
 
 data Dept = COMP | EN -- more can come
+  deriving (Show, Eq, Ord)
 $(deriveSafeCopy 0 'base ''Dept)
 
 data Term = Spring | Summer | Fall  -- might evolve to cover 2 summer terms
+  deriving (Show, Eq, Ord)
 $(deriveSafeCopy 0 'base ''Term)
 
 data CourseSection = NamedSection String
                    | NumberedSection Int
+  deriving (Eq, Ord)
 $(deriveSafeCopy 0 'base ''CourseSection)
+instance Show CourseSection where
+  show (NamedSection s) = s
+  show (NumberedSection n) = show n
                      
 data Course = Course { dept :: Dept
                      , number :: Int
@@ -34,8 +42,11 @@ data Course = Course { dept :: Dept
                      , term :: Term
                      , section :: Maybe CourseSection
                      }
+  deriving (Eq, Ord)
 $(deriveSafeCopy 0 'base ''Course)
   
+instance Show Course where
+  show c = show (dept c) ++ " " ++ show (number c)
               
 -- | shortcuts for standard COMP and EN courses
 comp, en :: Int -> Year -> Term -> Course
