@@ -15,6 +15,8 @@ And then we have some imports:
 > import qualified Text.Blaze.Html5 as H
 > import qualified Text.Blaze.Html5.Attributes as A
 
+> import Server
+
 <h3><a name="starting">Starting the Server</a></h3>
 
 To start the app we call the `serve` function. The first argument
@@ -39,6 +41,8 @@ Here is our web application:
 >   , dir "fortune" $ fortune
 >   , dir "files"   $ fileServing
 >   , dir "upload"  $ upload
+>   , dir "login"   $ login template
+>   , dir "lossage" $ return $ template "lossage" (H.p "Something bad happened.")
 >   , homePage
 >   ]
 
@@ -84,6 +88,7 @@ We can then use that template like this:
 >            H.p $ a ! href "/fortune"       $ "(fortune) cookies"
 >            H.p $ a ! href "/files"         $ "file serving"
 >            H.p $ a ! href "/upload"        $ "file uploads"
+>            H.p $ a ! href "/login"         $ "sign in"
 
 `ok` tells the server to return the page with the HTTP response code '200 OK'. There are other helper functions like `notFound` and `seeOther` for other response codes. Or use `setResponseCode` to specify a response code by number.
 
