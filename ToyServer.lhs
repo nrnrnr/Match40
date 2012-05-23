@@ -30,7 +30,7 @@ is an optional configuration parameter. The second argument is our web
 application:
 
 > main :: IO ()
-> main = do bracket (openLocalFrom "test-state")
+> main = do bracket (openLocalFrom "test-state/state/State.Database")
 >                   (createCheckpointAndClose)
 >                   (serve Nothing . myApp)
 
