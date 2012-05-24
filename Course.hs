@@ -4,11 +4,13 @@ module Course
        , Dept(..), Term(..), CourseSection(..), Year(..)
        , comp, en
        , emptyCourseData
+       , courseNamed
        )
 where
   
 import Data.SafeCopy
 import Data.Time.Clock
+import System.IO
 
 import Identity
 
@@ -18,16 +20,28 @@ import Identity
 newtype Year = Year { unYear :: Int }
   deriving (Eq, Ord)
 
+instance Read Year where
+  readsPrec n = map (\(a, s) -> (Year a, s)) . readsPrec n
+
+instance Show Year where 
+  show = show . unYear
+
 $(deriveSafeCopy 0 'base ''Year)
 
 data Dept = COMP | EN -- more can come
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Read)
 $(deriveSafeCopy 0 'base ''Dept)
 
 data Term = Spring | Summer | Fall  -- might evolve to cover 2 summer terms
   deriving (Show, Eq, Ord)
 $(deriveSafeCopy 0 'base ''Term)
 
+instance Read Term where
+  readsPrec _ ('u':s) = [(Summer, s)]
+  readsPrec _ ('f':s) = [(Fall, s)]
+  readsPrec _ ('s':s) = [(Spring, s)]
+  readsPrec _ _ = []
+  
 data CourseSection = NamedSection String
                    | NumberedSection Int
   deriving (Eq, Ord)
@@ -53,6 +67,32 @@ comp, en :: Int -> Year -> Term -> Course
 
 comp n y t = Course COMP n y t Nothing
 en   n y t = Course EN   n y t Nothing
+
+courseNamed :: [String] -> IO (Maybe Course)
+courseNamed = needsArg tryDept 
+  where needsArg f [] = return Nothing
+        needsArg f (s:ss) = f s ss
+
+        tryDept dept ss = case readMaybe dept of
+          Just dept -> withDept dept ss
+          Nothing -> withDept COMP (dept:ss)
+
+        withDept d = needsArg (withDept' d)
+        withDept' dept num ss = case readMaybe num of
+            Just num -> takeSem num ss
+            Nothing -> return Nothing
+          where takeSem num [] = do (year, term) <- nextSemester
+                                    return $ Just $ Course dept num year term Nothing
+                takeSem num (sem:ss) = error "unimp"
+
+nextSemester :: IO (Year, Term)
+nextSemester = do hPutStrLn stderr "this is appalling: it's always Fall 2012?!"
+                  return (Year 2012, Fall)
+
+readMaybe :: Read a => String -> Maybe a
+readMaybe s = case [ x | (x, t) <- reads s, ("", "") <- lex t ] of
+  [a] -> Just a
+  _ -> Nothing
 
 
 
