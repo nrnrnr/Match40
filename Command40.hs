@@ -8,6 +8,7 @@ import Data.Maybe
 import System.Environment
 import System.IO
 
+import Course
 import State
 import Updates
 import User
@@ -59,14 +60,20 @@ whois s = do acid <- openLocal
              users <- query acid PeekUsers
              putStrLn $ show $ findUser s users
              
-addCourseCommand = varargs "addcourse" addcourse "addcourse [dept] number [semester]"
+addCourseCommand =
+  varargs "addcourse" addcourse "addcourse [dept] number [section] [semester]"
 
 addcourse ss = do course <- courseNamed ss
-                  acid <- openLocal
-                  result <- update acid (AddCourse course)
-                  putStrLn (show result)
-
-addc dept num sem = 
+                  case course of Nothing -> courseError
+                                 Just c -> do
+                                   acid <- openLocal
+                                   result <- update acid (AddCourse c)
+                                   putStrLn (show result)
+  where courseError = do
+          hPutStrLn stderr $
+            "Course '" ++ intercalate " " ss ++ "' does not parse!" 
+          hPutStr stderr "Usage: "
+          commandUsage addCourseCommand
 
 main :: IO ()
 main = do args <- getArgs
@@ -82,4 +89,5 @@ main = do args <- getArgs
                     putStr "Usage:" >> commandUsage command
   where usage =  do putStrLn $ "Commands:"
                     mapM_ commandUsage commands
-        commandUsage = putStrLn . ("  " ++) . cmdUsage
+
+commandUsage = putStrLn . ("  " ++) . cmdUsage
