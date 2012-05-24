@@ -3,6 +3,7 @@ module Updates
        ( NewPassword(..), NewFirstname(..), NewPortrait(..)
        , NewThumbnail(..), NewBlurb(..) , NewPhone(..), NewEmail(..)
        , AddUser(..)
+       , AddCourse(..)
        , PeekUsers(..)
        , openLocal, openRemote, openLocalFrom
        )
@@ -22,17 +23,30 @@ import Network
 import System.Posix.Files
 
 import Auth
+import Course
 import Identity
 import State hiding (UserNotFound)
 import User
 
 -- XXX TODO user lookup here and in State module
 
+data UpdateResult0 = UpdateOK0
+                  | UserNotFound0 UserIdent
+                  | DuplicateUser0 User
+  deriving (Typeable, Show)
+$(deriveSafeCopy 0 'base ''UpdateResult0)
+
 data UpdateResult = UpdateOK
                   | UserNotFound UserIdent
                   | DuplicateUser User
+                  | DuplicateCourse Course
   deriving (Typeable, Show)
-$(deriveSafeCopy 0 'base ''UpdateResult)
+instance Migrate UpdateResult where
+  type MigrateFrom UpdateResult = UpdateResult0
+  migrate UpdateOK0 = UpdateOK
+  migrate (UserNotFound0 id)   = (UserNotFound id)
+  migrate (DuplicateUser0 u)   = (DuplicateUser u)
+$(deriveSafeCopy 1 'extension ''UpdateResult)
 
 type UserUpdate a = UserIdent -> a -> Update Database UpdateResult
 
@@ -93,9 +107,18 @@ addUser u = do
 peekUsers :: Query Database [User]
 peekUsers = fmap users ask
 
+
+addCourse :: Course -> Update Database UpdateResult
+addCourse c = do
+  db <- get
+  case find (c ==) (courses db) of
+    Just course -> return $ DuplicateCourse course
+    Nothing   -> do { put $ db { courses = c : courses db }; return UpdateOK }
+
+
 $(makeAcidic ''Database [ 'newPassword, 'newFirstname, 'newPortrait
                         , 'newThumbnail, 'newBlurb, 'newPhone, 'newEmail
-                        , 'addUser, 'peekUsers
+                        , 'addUser, 'peekUsers, 'addCourse
                         ])
 
 -----------------------------
