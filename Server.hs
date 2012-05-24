@@ -8,6 +8,7 @@ where
 import Control.Applicative ((<$>), optional)
 import Data.Acid
 import Data.Acid.Advanced
+import Data.List
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text.Lazy (unpack)
@@ -57,7 +58,7 @@ shortUsersPage :: (Text -> Html -> Response) -> AcidState Database
                -> ServerPart Response
 shortUsersPage template acid = do
   users <- query' acid PeekUsers
-  shortUsers template [Admin] users
+  shortUsers template [Admin] (sort users)
 
 
 shortUsers :: (Text -> Html -> Response) -> [Role] -> [User] -> ServerPart Response

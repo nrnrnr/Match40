@@ -51,10 +51,16 @@ data Fullname = Fullname { firstName :: String -- ^ student's preferred name
                          , lastName :: String
                          , fullName :: String -- ^ official full name
                          }
+  deriving (Eq)
 $(deriveSafeCopy 0 'base ''Fullname)
   
 instance Show Fullname where
   show name = firstName name ++ " " ++ lastName name
+
+instance Ord Fullname where
+  compare n n' = compare (parts n) (parts n')
+    where parts n = (map toLower (lastName n), map toLower (firstName n),
+                     (lastName n, firstName n, fullName n))
 
 newtype Photo = Photo { unPhoto :: String } -- ^ pathname to somewhere
 newtype Phone = Phone { unPhone :: String }
@@ -119,6 +125,14 @@ data User = User { uid      :: UserIdent
                  }
   deriving (Typeable)
 $(deriveSafeCopy 0 'base ''User)
+
+instance Eq User where
+  u == u' = uid u == uid u'
+  
+
+instance Ord User where
+  compare u u' = compare (parts u) (parts u')
+    where parts u = (fullName $ name $ profile u, uid u)
 
 instance Show User where
   show u = show (name $ profile u) ++ " <" ++ show (uid u) ++ ">"
