@@ -27,6 +27,10 @@ emptyDatabase = Database [] [] []
 data UserFound = UserFound User
                | UserNotFound
                | Ambiguous String
+instance Show UserFound where
+  show (UserFound u) = show u
+  show UserNotFound = "no such user"
+  show (Ambiguous what) = "ambiguous " ++ what
                    
 instance Monoid UserFound where
   mempty = UserNotFound
@@ -34,6 +38,7 @@ instance Monoid UserFound where
   UserNotFound `mappend` m = m
   Ambiguous msg `mappend` m = Ambiguous msg
   
+findUser :: String -> [User] -> UserFound
 findUser s users = by "unique ID" (show . uid) `mappend`
                    select "other ID" (any (==s) . map show . otherIds) `mappend`
                    by "full name" (show . name . profile) `mappend`
