@@ -48,6 +48,7 @@ Here is our web application:
 >   , dir "form"    $ formPage
 >   , dir "fortune" $ fortune
 >   , dir "files"   $ fileServing
+>   , dir "images"  $ path safePhotoServing
 >   , dir "upload"  $ upload
 >   , dir "login"   $ login template
 >   , dir "lossage" $ return $ template "lossage" (H.p "Something bad happened.")

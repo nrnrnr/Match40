@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Pages.User ( renderUserLineFrom
+                  , defaultThumbnail
                   )
 where
   
@@ -21,19 +22,20 @@ template s = appTemplate []
 
 renderUserLineFrom :: [Role] -> User -> H.Html
 renderUserLineFrom viewroles user = do
-  toHtml thumb ! A.alt "thumbnail image"
+  toHtml thumb ! A.alt "thumbnail image" ! A.height (fromString $ show 25)
+  " "
   (H.toHtml . show . name . profile) user
   (H.toHtml . commafy . map show . catMaybes . map cansee . roles . profile) user
   where cansee = sees viewroles user
         commafy [] = ""
         commafy xs = " (" ++ intercalate ", " xs ++ ")"
         thumb =
-          fromMaybe defaultThumb (join $ cansee $ thumbnail $ profile user)
+          fromMaybe defaultThumbnail (join $ cansee $ thumbnail $ profile user)
         
 instance ToHtml Photo where
   toHtml (Photo path) = H.img ! A.src (fromString $ "/images/" ++ path)
         
                      
                      
-defaultThumb :: Photo
-defaultThumb = Photo "defthumb.jpg"
+defaultThumbnail :: Photo
+defaultThumbnail = Photo "elephant.jpg"

@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 module Server 
        ( login, shortUsersPage
+       , servePhoto, safePhotoServing
        )
 where
 
@@ -13,6 +14,7 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Text.Lazy (unpack)
 import Happstack.Lite
+import Happstack.Server.FileServe.BuildingBlocks (guessContentType)
 import Text.Blaze.Html5 (Html, (!), a, form, input, p, toHtml, label)
 import Text.Blaze.Html5.Attributes (action, enctype, href, name, size, type_, value)
 import qualified Text.Blaze.Html5 as H
@@ -67,3 +69,15 @@ shortUsers template roles users =
     H.p $ H.toHtml $ "The system has " ++ show (length users) ++ " users."
     mapM_ (H.p . renderUserLineFrom roles) users
 
+
+servePhoto :: Photo -> ServerPart Response
+servePhoto photo = serveFile (asContentType mime_ty) path
+  where mime_ty = fromMaybe "image/jpeg" (guessContentType mimeTypes path)
+        path = photoPath photo
+        
+photoPath (Photo path) = "images/" ++ path
+
+safePhotoServing :: String -> ServerPart Response
+safePhotoServing s =
+  if any (== '/') s then servePhoto defaultThumbnail
+  else servePhoto (Photo s)
