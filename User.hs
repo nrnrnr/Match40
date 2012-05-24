@@ -28,7 +28,7 @@ instance Show Role where
   show (Student c) = show c ++ " student"
   show (TA c)      = show c ++ " TA"
   show (Former r)  = "former " ++ show r
-  show Admin       = "really cool hacker"
+  show Admin       = "hacker"
 
 data TimeOfRole = AnyTime | Current | Past
 $(deriveSafeCopy 0 'base ''TimeOfRole)
