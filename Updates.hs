@@ -102,7 +102,9 @@ addUser u = do
   db <- get
   case find ((== uid u) . uid) (users db) of
     Just user -> return $ DuplicateUser user
-    Nothing   -> do { put $ db { users = u : users db }; return UpdateOK }
+    Nothing   -> do let u' = u { userNumber = nextUserNumber db }
+                    put $ db { users = u' : users db }
+                    return UpdateOK
 
 peekUsers :: Query Database [User]
 peekUsers = fmap users ask

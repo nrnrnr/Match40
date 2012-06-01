@@ -1,10 +1,13 @@
-{-# LANGUAGE TypeFamilies, DeriveDataTypeable, TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies, DeriveDataTypeable, TemplateHaskell, RecordWildCards #-}
 module User
        ( Role(..), Controlled(..), TimeOfRole(..)
        , User(..), Profile(..), Fullname(..), Photo(..), Phone(..), Email(..)
        , PartnerData(..), Orientation(..), SocialNetwork(..), PartnerBreadth(..)
+       , UserNumber(..)
        , newUser, nameOfEmail
        , parseName, noPartnerData
+
+       , User0, numberUser -- migration
        )
 where
 
@@ -114,17 +117,22 @@ noPartnerData = PartnerData { orientation = Nothing
                             , breadth = Nothing
                             }
 
+newtype UserNumber = UserNumber Int
+$(deriveSafeCopy 0 'base ''UserNumber)
 
 -- | What we know about a user.  Except for the profile,
 -- only an instructor or administrator can change what's here.
 data User = User { uid      :: UserIdent
+                 , userNumber :: UserNumber
                  , otherIds :: [OtherIdent]
                  , synonyms :: [String]
                  , profile  :: Profile
                  , partnerData :: PartnerData
                  }
   deriving (Typeable)
-$(deriveSafeCopy 0 'base ''User)
+$(deriveSafeCopy 1 'extension ''User)
+
+
 
 instance Eq User where
   u == u' = uid u == uid u'
@@ -157,6 +165,8 @@ newUser email roles =
                    , synonyms = []
                    , partnerData = noPartnerData
                    , uid = SISEmail email
+                   , userNumber =
+                       error "user number assigned on insertion into database"
                    , otherIds = [ ]
                    }
  where name = nameOfEmail email
@@ -174,3 +184,22 @@ public a = ClassmateSees Current a
 private a = InstructorSees Current a
 
 
+data User0 = User0 { uid0      :: UserIdent
+                   , otherIds0 :: [OtherIdent]
+                   , synonyms0 :: [String]
+                   , profile0  :: Profile
+                   , partnerData0 :: PartnerData
+                   }
+  deriving (Typeable)
+$(deriveSafeCopy 0 'base ''User0)
+
+numberUser :: UserNumber -> User0 -> User
+numberUser n (User0 {..}) = User { userNumber = n
+                                 , uid = uid0, otherIds = otherIds0
+                                 , synonyms = synonyms0, profile = profile0
+                                 , partnerData = partnerData0
+                                 }
+
+instance Migrate User where
+  type MigrateFrom User = User0
+  migrate = numberUser (error "direct migration without user number")

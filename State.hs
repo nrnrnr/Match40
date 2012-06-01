@@ -1,6 +1,7 @@
-{-# LANGUAGE TypeFamilies, DeriveDataTypeable, TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies, DeriveDataTypeable, TemplateHaskell, RecordWildCards #-}
 module State ( Database(..), User(..)
              , emptyDatabase
+             , nextUserNumber
              , findUser, UserFound(..)
              ) 
 where
@@ -13,16 +14,20 @@ import Data.Typeable
 import Course
 import User
 
-data Database = Database { users :: [User]
+data Database = Database { firstUserNum :: Int
+                         , users :: [User]
                          , courses :: [Course]
                          , courseData :: [CourseData]
                          }
   deriving (Typeable)
 
-$(deriveSafeCopy 0 'base ''Database)
+$(deriveSafeCopy 1 'extension ''Database)
   
 emptyDatabase :: Database
-emptyDatabase = Database [] [] []
+emptyDatabase = Database 1000 [] [] []
+
+nextUserNumber :: Database -> UserNumber
+nextUserNumber (Database { firstUserNum = n, users = us }) = UserNumber (n + length us)
 
 data UserFound = UserFound User
                | UserNotFound
@@ -48,3 +53,22 @@ findUser s users = by "unique ID" (show . uid) `mappend`
                           [] -> UserNotFound
                           [u] -> UserFound u
                           _ -> Ambiguous what
+
+------ old types
+data Database0 = Database0 { users0 :: [User0]
+	                   , courses0 :: [Course]
+                           , courseData0 :: [CourseData]
+                           }
+  deriving (Typeable)
+
+$(deriveSafeCopy 0 'base ''Database0)
+
+instance Migrate Database where
+  type MigrateFrom Database = Database0
+  migrate Database0 {..} = Database { firstUserNum = start
+                                    , users = zipWith numberUser nums users0
+                                    , courses = courses0
+                                    , courseData = courseData0
+                                    }
+      where start = firstUserNum emptyDatabase
+            nums = map UserNumber [start..]
