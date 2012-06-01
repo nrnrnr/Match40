@@ -10,7 +10,8 @@ import Data.List
 import Data.Maybe
 import Data.String
 
-import           Text.Blaze.Html5 ((!), ToHtml(..))
+import Text.Blaze ((!), ToMarkup(..))
+import Text.Blaze.Html (toHtml)
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
@@ -32,8 +33,8 @@ renderUserLineFrom viewroles user = do
         thumb =
           fromMaybe defaultThumbnail (join $ cansee $ thumbnail $ profile user)
         
-instance ToHtml Photo where
-  toHtml (Photo path) = H.img ! A.src (fromString $ "/images/" ++ path)
+instance ToMarkup Photo where
+  toMarkup (Photo path) = H.img ! A.src (fromString $ "/images/" ++ path)
         
                      
                      
