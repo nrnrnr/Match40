@@ -120,6 +120,9 @@ noPartnerData = PartnerData { orientation = Nothing
 newtype UserNumber = UserNumber Int
 $(deriveSafeCopy 0 'base ''UserNumber)
 
+instance Show UserNumber where
+    show (UserNumber n) = show n
+
 -- | What we know about a user.  Except for the profile,
 -- only an instructor or administrator can change what's here.
 data User = User { uid      :: UserIdent
@@ -182,6 +185,8 @@ public, private :: a -> Controlled a
 public a = ClassmateSees Current a
 
 private a = InstructorSees Current a
+
+------------ old types
 
 
 data User0 = User0 { uid0      :: UserIdent

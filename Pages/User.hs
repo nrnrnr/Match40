@@ -27,6 +27,9 @@ renderUserLineFrom viewroles user = do
   " "
   (H.toHtml . show . name . profile) user
   (H.toHtml . commafy . map show . catMaybes . map cansee . roles . profile) user
+  " #"
+  (H.toHtml . show. userNumber) user
+
   where cansee = sees viewroles user
         commafy [] = ""
         commafy xs = " (" ++ intercalate ", " xs ++ ")"
