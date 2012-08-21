@@ -2,7 +2,7 @@
 module State ( Database(..), User(..)
              , emptyDatabase
              , nextUserNumber
-             , findUser, UserFound(..)
+             , findUser, UserFound(..), findUserPassphrase
              ) 
 where
 
@@ -11,6 +11,7 @@ import Data.Monoid
 import Data.SafeCopy
 import Data.Typeable
 
+import Auth
 import Course
 import User
 
@@ -53,6 +54,13 @@ findUser s users = by "unique ID" (show . uid) `mappend`
                           [] -> UserNotFound
                           [u] -> UserFound u
                           _ -> Ambiguous what
+
+
+findUserPassphrase :: String -> String -> [User] -> Either User UserFound
+findUserPassphrase s pw users = try (findUser s users)
+  where try (UserFound u) | validateAuth (auth (profile u)) pw = Left u
+        try uf = Right uf
+          
 
 ------ old types
 data Database0 = Database0 { users0 :: [User0]

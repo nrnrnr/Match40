@@ -3,7 +3,7 @@ module Auth
        ( Authentication
        , fromPassword
        , validateAuth
-       , passwordPrompt
+       , passwordPrompt, authPromptFor
        )
 where
 
@@ -32,16 +32,19 @@ fromPassword s =
 validateAuth :: Authentication -> String -> Bool
 validateAuth auth = validatePassword (hashedPassword auth) . p
 
+authPromptFor :: Show a => a -> IO Authentication
+authPromptFor a =
+  (passwordPrompt $ Just $ "Password for " ++ show a ++ ": ") >>= fromPassword
 
 
-passwordPrompt :: Maybe String -> IO Authentication
+passwordPrompt :: Maybe String -> IO String
 passwordPrompt prompt = do
   pass  <- getPrompt $ fromMaybe "Password:" prompt ++ " "
   pass' <- getPrompt "Again: "
   if pass /= pass' then
     putStrLn "Inconsistent passwords" >> passwordPrompt prompt
   else
-    fromPassword pass
+    return pass
  where
   getPrompt s = do putStr s
                    hFlush stdout

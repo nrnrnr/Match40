@@ -50,7 +50,9 @@ Here is our web application:
 >   , dir "files"   $ fileServing
 >   , dir "images"  $ path safePhotoServing
 >   , dir "upload"  $ upload
->   , dir "login"   $ login template
+>   , dir "login"   $ dblogin template acid
+>   , dir "xlogin"  $ login template
+>   , dir "checkauth"  $ checkauth 
 >   , dir "lossage" $ return $ template "lossage" (H.p "Something bad happened.")
 >   , dir "users"   $ shortUsersPage template acid
 >   , homePage
@@ -99,6 +101,8 @@ We can then use that template like this:
 >            H.p $ a ! href "/files"         $ "file serving"
 >            H.p $ a ! href "/upload"        $ "file uploads"
 >            H.p $ a ! href "/login"         $ "sign in"
+>            H.p $ a ! href "/xlogin"        $ "fake sign in"
+>            H.p $ a ! href "/checkauth"     $ "have I signed in?"
 >            H.p $ a ! href "/users"         $ "user list"
 
 `ok` tells the server to return the page with the HTTP response code '200 OK'. There are other helper functions like `notFound` and `seeOther` for other response codes. Or use `setResponseCode` to specify a response code by number.
@@ -208,6 +212,15 @@ There are only a few new things in this example compared to the form example.
  4. `mkCookie` takes the cookie name and the cookie value and makes a `Cookie`.
 
  5. `seeOther` (aka, 303 redirect) tells the browser to do a new GET request on "/fortune".
+
+> checkauth :: ServerPart Response
+> checkauth = do cookie <- optional $ lookCookieValue authCookieName
+>                let what = fromMaybe "you are not authorized" cookie
+>                ok $ template "status" $ do
+>                     H.p "Your authorization status is: "
+>                     H.p (toHtml what)
+
+
 
 <h3><a name="fileserving">File Serving</a></h3>
 

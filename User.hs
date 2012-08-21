@@ -153,7 +153,7 @@ instance Show User where
 
 newUser :: String -> [Role] -> IO User
 newUser email roles =
-  do auth <- passwordPrompt $ Just $ "Password for " ++ show name ++ ":"
+  do auth <- authPromptFor name
      let prof = Profile { roles = map private roles
                         , auth = auth
                         , name = name

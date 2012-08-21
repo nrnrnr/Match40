@@ -54,11 +54,13 @@ Executable server40
                      blaze-html, blaze-markup,
                      bytestring (>=0.9),
                      bcrypt (>=0.0.3),
+                     entropy,
                      happstack-server == 7.0.*,
                      happstack-lite == 7.2.*,
                      mtl >= 2.0,
                      network == 2.3.*,
                      safecopy (>=0.6.1),
+                     transformers (>=0.2.2),
                      text == 0.11.*,
                      time == 1.2.*,
                      unix ==2.4.*

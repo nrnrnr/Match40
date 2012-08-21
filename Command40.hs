@@ -8,11 +8,13 @@ import Data.Maybe
 import System.Environment
 import System.IO
 
+import Auth
 import Course
 import State
 import Updates
 import User
 
+myOpen = openLocalFrom "test-state/state/State.Database"
 
 class StringCommand a where
   arity :: a -> Maybe Int
@@ -47,16 +49,32 @@ varargs what f usage = Command what usage Nothing f
 commands :: [Command]
 commands = [ command "adduser" adduser   "adduser email     Add a user"
            , command "addadmin" addadmin "addadmin email    Add a hacker"
+           , command "passwd"   passwd   "passwd email      Change a password"
+           , command "auth"     auth     "auth email        Test auth code"
            , command "whois"   whois     "whois <name-or-email>   Find a user"
            , addCourseCommand
            ]
   where adduser email  = newUser email [] >>= addUser
         addadmin email = newUser email [] >>= addUser
-        addUser user = do acid <- openLocal
+        addUser user = do acid <- myOpen
                           result <- update acid (AddUser user)
                           putStrLn (show result)
+        passwd email = do acid <- myOpen
+                          users <- query acid PeekUsers
+                          case findUser email users of
+                            UserFound user -> -- XXX need some abstraction here
+                              do auth <- authPromptFor user
+                                 result <- update acid (NewPassword (uid user) auth)
+                                 putStrLn (show result)
+        
+        auth email = do acid <- myOpen
+                        auth <- passwordPrompt $ Just $ "Password for " ++ email
+                        users <- query acid PeekUsers
+                        case findUserPassphrase email auth users of
+                            Left user -> putStrLn $ "Authorized " ++ show user
+                            Right uf -> putStrLn $ "Failed: " ++ show uf
 
-whois s = do acid <- openLocal
+whois s = do acid <- myOpen
              users <- query acid PeekUsers
              putStrLn $ show $ findUser s users
              
